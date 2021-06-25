@@ -25,8 +25,7 @@
 #'     where \code{u} is the reduced form VAR residual, has a diagonal covariance
 #'     matrix.
 #'
-#'     \code{lmd}: nvar by m matrix with columns standard deviations of
-#'         \code{e=A0 \% * \% u}
+#'     \code{lmd}: nvar by m matrix of relative variances of structural shock.
 #'
 #'     \code{Tsigbrk}: vector of observation numbers after which the model
 #'          switches to the next column of \code{lmd}.
@@ -103,7 +102,7 @@ function(ydata=NA,lags=6,xdata=NULL,const=TRUE,breaks=NULL,lambda=5,mu=2,ic=NULL
     ## 12/18/05:  added ts properties for u, better comments.
     ##---------------------------------------
     ## Modified 2013.8.12 to allow use of A0, lmd, Tsigbrk.  With non-null A0, By is A+ from
-    ## A0 %*% y(t) = A+(L) %*% y(t) + exp(-.5 lmd(t)) * eps(t) .  This works even with
+    ## A0 %*% y(t) = A+(L) %*% y(t) + (1/sqrt(lmd(t))) * eps(t) .  This works even with
     ## lmd constant, but in that case running a single rf estimate (A0=I), then iterating
     ## on (A0, lmd) alone makes more sense. With lmd varying, rf estimates change with lmd.
     ## --------------------------------------------------------
@@ -231,8 +230,7 @@ function(ydata=NA,lags=6,xdata=NULL,const=TRUE,breaks=NULL,lambda=5,mu=2,ic=NULL
         } else {
             lmdseries <- lmdseries[ , smpl]
         }
-        ## i.e., use mean of lmdseries for dummy observation weights.  Note that
-        ## since lmd is logged, this is geometric mean, maybe not best. 
+        ## i.e., use 1 as relative variance for dummy observation weights.  
         nX <- dim(X)[2]
         ya0 <- y %*% t(A0)
         B <- matrix(0,  nX, nvar)
@@ -241,10 +239,9 @@ function(ydata=NA,lags=6,xdata=NULL,const=TRUE,breaks=NULL,lambda=5,mu=2,ic=NULL
         xxi <- array(0, c(nX, nX, nvar))
         logdetxxi <- vector("numeric", nvar)
         snglty <- vector("numeric", nvar)
-        wtseries <- exp(.5 * lmdseries)
+        wtseries <- 1 / sqrt(lmdseries)
         for (iq in 1:nvar) {
-            wt <- wtseries[iq, ] #exp(.5 * lmdseries[iq, ])
-            ## weighting by exp(lmd/2), so log error variances are -lmd
+            wt <- wtseries[iq, ] 
             Xq <-  wt * X
             yq <- wt * ya0[ , iq]
             lso <- lsfit(Xq, yq, intercept=FALSE)
