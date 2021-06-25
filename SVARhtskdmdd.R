@@ -102,22 +102,22 @@ SVARhtskdmdd <- function(ydata,lags,xdata=NULL, const=TRUE, A0, lmd, Tsigbrk, br
     ## ## --------------------- dates.  Conversion from dates and adding T done in bvarWrap3().
     ## ## Tsigbrk <- c(invTime(Tsigbrk, ydata), T)            #dummy obs at end
     ## lmd <- cbind(lmd, lmdbar)
-    lmd <- cbind(lmd, rep(1, nv))
+    lmd <- cbind(lmd, rep(1, nv))       #sets lmd weight on dummies to one.
     ##-------------------------------------------
     ## var = rfvar3(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum),
     ## breakus=matrix(c(breaks, T, T + vp$pbreaks), ncol=1),
     ## const=FALSE, lambda=lambda, mu=mu, ic=ic) # const is FALSE in this call because
     ## ones alread put into xdata
     var = rfvar3(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum),
-        breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1), const=FALSE, lambda=NULL,
-        mu=NULL, ic=ic, sigpar=list(A0=A0,lmd=lmd,Tsigbrk=c(Tsigbrk,T))
+                 breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1), const=FALSE, lambda=NULL,
+                 mu=NULL, ic=ic, sigpar=list(A0=A0,lmd=lmd,Tsigbrk=c(Tsigbrk,T)))
     ##  const is FALSE in this call because ones alread put into xdata
-	if (is.null(var)) {
-		return(list(w = -Inf))
-	}    
-	Tu <- dim(var$u)[1]
+    if (is.null(var)) {
+        return(list(w = -Inf))
+    }    
+    Tu <- dim(var$u)[1]
     if ( any(var$snglty > 0) ) error( var$snglty, " redundant columns in rhs matrix")
-    lmdllh <- .5 * sum(var$lmdseries)
+    lmdllh <- -.5 * sum(log(var$lmdseries))
     llh <- -.5 * sum(var$u^2) + Tu * (-nv * log(2 * pi)/2 + determinant(A0)$modulus) +
         lmdllh
     ## nb: determinant() returns log of abs value of determinant
@@ -125,10 +125,10 @@ SVARhtskdmdd <- function(ydata,lags,xdata=NULL, const=TRUE, A0, lmd, Tsigbrk, br
     w <-  llh + .5 * sum(var$logdetxxi) + nv * nX * log(2 * pi)/2
     if(train!=0) {
         if(train <= lags)
-            {
-                cat("end of training sample <= # of lags\n")  #
-                    return
-            }
+        {
+            cat("end of training sample <= # of lags\n")  #
+            return
+        }
         Tp <- train
         tbreaks <- c(breaks[breaks<train],Tp)
     } else {
@@ -143,6 +143,11 @@ SVARhtskdmdd <- function(ydata,lags,xdata=NULL, const=TRUE, A0, lmd, Tsigbrk, br
         ## It is assumed that there are no breaks in lmd in the training sample!
         priornsig <- 2
         priorlmd <- cbind(lmd[ , 1], lmd[ , dim(lmd)[2]])
+        ## This means training sample observations are weighted relative to those
+        ## set by vprior() in the same way as any other obs in the first regime.
+        ## This would not be sensible if the training sample weren't just the first
+        ## part of the real data.
+        ##
         varp <- rfvar3(ydata=rbind(ytrain, vp$ydum), lags=lags, xdata=rbind(xtrain, vp$xdum),
                        breaks=c(tbreaks, Tp+vp$pbreaks), 
                        lambda=NULL, mu=NULL, const=FALSE, ic=ic,
@@ -152,9 +157,9 @@ SVARhtskdmdd <- function(ydata,lags,xdata=NULL, const=TRUE, A0, lmd, Tsigbrk, br
             warning("Prior improper, short ", varp$snglty, " df.  Results likely nonsense.")
         } else {
             Tup <- dim(varp$u)[1]
-            lmdllhp <- .5 * sum(varp$lmdseries)
-            llhp <- -.5 * sum(varp$u^2) - Tup * (nv * log(2 * pi)/2 - determinant(A0)$modulus) +
-                lmdllhp
+            lmdllhp <- -.5 * sum(log(varp$lmdseries))
+            llhp <- -.5 * sum(varp$u^2) - Tup * (nv * log(2 * pi)/2
+                - determinant(A0)$modulus) + lmdllhp
             normalizer <- .5 * sum(varp$logdetxxi) + nv * nX * log(2 * pi)/2
             wp <- llhp + normalizer
             w <- w-wp
