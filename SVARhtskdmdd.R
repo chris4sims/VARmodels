@@ -21,10 +21,12 @@
 #' Dummy observations as a training sample.
 
 #' @param ydata  endogenous variable data matrix, including initial condition dates.
+#' @param lags   number of lags in the model.
 #' @param xdata  exogenous variable data matrix, including initial condition dates.  
 #' @param const  Constant term is added automatically if const=TRUE.
 #' @param A0     Contemporaneous coefficient matrix --- constant.
-#' @param lmd    Column Vectors of -log variances of structural shocks.
+#' @param lmd    Relative  variances of structural shocks.  Rows for variables,
+#'               columns for periods.  Row-averages normalized to one.
 #' @param Tsigbrk Dates at which lmd vectors change.  Last date with old lmd (not first
 #'                with new).
 #' @param breaks breaks in the data.  The first lags data points after a break are used
@@ -90,30 +92,26 @@ SVARhtskdmdd <- function(ydata,lags,xdata=NULL, const=TRUE, A0, lmd, Tsigbrk, br
     Tx <- dim(xdata)[1]
     nx <- dim(xdata)[2]
     vp <- varprior(nv,nx,lags,mnprior,vprior, urprior=urprior, ybar=ybar, nstat=nstat) # vp$: ydum,xdum,pbreaks
-    ## -------- set lmd for prior dummies --------------
-    if (!is.null(dim(lmd))) {
-        lmdbar <- apply(lmd, 1, mean)
-    } else {
-        lmdbar <- lmd
-    }
-    ## --------------------- Tsigbrk assumed to be indexes into ydata matrix, not
-    ## --------------------- dates.  Conversion from dates and adding T done in bvarWrap3().
-    ## Tsigbrk <- c(invTime(Tsigbrk, ydata), T)            #dummy obs at end
-    lmd <- cbind(lmd, lmdbar)
+    ## ## -------- set lmd for prior dummies.  No longer needed since we're not logging lmd
+    ## if (!is.null(dim(lmd))) {
+    ##     lmdbar <- apply(lmd, 1, mean)
+    ## } else {
+    ##     lmdbar <- lmd
+    ## }
+    ## ## --------------------- Tsigbrk assumed to be indexes into ydata matrix, not
+    ## ## --------------------- dates.  Conversion from dates and adding T done in bvarWrap3().
+    ## ## Tsigbrk <- c(invTime(Tsigbrk, ydata), T)            #dummy obs at end
+    ## lmd <- cbind(lmd, lmdbar)
+    lmd <- cbind(lmd, rep(1, nv))
     ##-------------------------------------------
-    ## var = rfvar3(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum), breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1),
-    ## const=FALSE, lambda=lambda, mu=mu, ic=ic) # const is FALSE in this call because ones alread put into xdata
+    ## var = rfvar3(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum),
+    ## breakus=matrix(c(breaks, T, T + vp$pbreaks), ncol=1),
+    ## const=FALSE, lambda=lambda, mu=mu, ic=ic) # const is FALSE in this call because
+    ## ones alread put into xdata
     var = rfvar3(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum),
         breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1), const=FALSE, lambda=NULL,
-        mu=NULL, ic=ic, sigpar=list(A0=A0,lmd=lmd,Tsigbrk=Tsigbrk))
+        mu=NULL, ic=ic, sigpar=list(A0=A0,lmd=lmd,Tsigbrk=c(Tsigbrk,T))
     ##  const is FALSE in this call because ones alread put into xdata
-    ## ISSUE 7/27: lmdbar is not being used for the dummies! because of the way Tsigbrk is coded
-    ## repaired in line below by Karthik in bpss code, but not fixed in IDex2019 until 2021-06-02.
-    var = rfvar3(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum),
-                 breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1), const=FALSE, lambda=NULL,
-                 mu=NULL, ic=ic, sigpar=list(A0=A0,lmd=lmd,Tsigbrk=c(Tsigbrk,T)), cores = cores,
-                 oweights = oweights, drawbe = drawbe)
-
 	if (is.null(var)) {
 		return(list(w = -Inf))
 	}    
