@@ -61,7 +61,7 @@
 #' @md
 #' @export
 #' 
-bvarwrapEx = function(x, verbose=FALSE, data = NULL, nLags = 5, Tsigbrk = NULL,
+bvarwrap  <-  function(x, verbose=FALSE, data = NULL, nLags = 5, Tsigbrk = NULL,
                       pparams = list(asig=1, mnprior=list(tight=1, decay=.3),
                                      urprior=list(lambda=5, mu=1), nstat=NULL)
                       )
@@ -189,7 +189,7 @@ bvarwrapEx = function(x, verbose=FALSE, data = NULL, nLags = 5, Tsigbrk = NULL,
         ## This is Dirichlet(2) on lmd/nSig, converted by Jacobian to a density
         ## for lmd itself.
         vout = SVARhtskdmdd(data, lags = nLags, xdata = NULL, const = TRUE, A0 = A,
-                            lmd = -log(lmd), Tsigbrk = Tsigbrk,
+                            lmd = lmd, Tsigbrk = Tsigbrk,
                             urprior = pparams$urprior, mnprior = pparams$mnprior,
                             vprior = pparams$vprior, nstat = pparams$nstat,
                             train = 0
