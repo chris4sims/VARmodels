@@ -1,0 +1,1 @@
+varDD and ADobsLH are written for a structural VAR specification.  To use to impose stability on a rf VAR, need contemporaneous --- "diagonality" --- dummy obs.
