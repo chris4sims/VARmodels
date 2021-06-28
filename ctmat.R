@@ -1,4 +1,5 @@
 ctmat <- function(n) {
+  ## cosine transform matrix
   ## F is a real orthogonal matrix (crossprod(F)=crossprod(t(F) = diag(n))) with first column a constant
   ## and succesive columns K after that oscillating  with periods 2n/(k-1). crossprod(F)=(n/2)*diag(n)
   F <- matrix(0,n,n)
