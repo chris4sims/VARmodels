@@ -1,0 +1,26 @@
+Have rfvar and svar, two programs that estimate var's using dummy observation 
+priors, but without normalizing the prior, and thus possibly with improper 
+priors.  Both call varprior to set up dummy obs.  (I.e., need to remove 
+rfvar3's redundant generation of dobs.  
+
+Then rfmdd (new name for mgnldnsty) and svarmdd use the first two above, 
+respectively, to calculate mdd's with normalized priors.
+
+svar takes A0 and lmd as given, uses equation-by-equation fit, allows weighted 
+observations.  (via lmd.  Separately as t-errors, or just dim(lmd)[2]==T?
+
+rfvar uses svd, so can handle singular rhs matrix, uses default prior with mu 
+and lambda only.
+
+Above can all be done on one git branch.
+--------------------------------------------------
+bvarwrap:  include A0,lmd prior parameters in parameter list.
+restore t-errors option?  Or is Tsigbrk==1:T enough?
+---------------------------------------------------
+postdraw, svarpostdraw, irfband, plotir:  remove redundancy in draws between 
+SVARpostdraw and irfband.  Is plotir even necessary?
+-----------------------------------------------------------------
+panel var project.  Need to allow cross-country variation in parameters, but 
+with shrinkage toward a common form.  But also need a better way to introduce 
+cross-country effects.
+------------------------------------------------------------
