@@ -36,8 +36,10 @@
 #' @param const Automatically generate a constant vector?
 #' @param breaks Column vector of row numbers in ydata and xdata after which
 #' there is a break.
-#' @param lambda  Weight on "co-persistence" dummy observations.
-#' @param mu Weight on "own persistence" dummy observations.
+#' @param lambda  Weight on "co-persistence" dummy observations. If NULL, no
+#'                such dummy observations.
+#' @param mu Weight on "own persistence" dummy observations.  If NULL, no
+#'                such dummy observations.
 #' @param ic If non-null, do not use initial conditions from \code{ydata} in
 #'           forming the prior.  Use \code{ic} instead.
 #' @param sigpar \code{list(A0, lmd, Tsigbrk)} When non-null, allows SVAR with
