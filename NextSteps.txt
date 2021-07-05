@@ -17,8 +17,23 @@ Above can all be done on one git branch.
 bvarwrap:  include A0,lmd prior parameters in parameter list.
 restore t-errors option?  Or is Tsigbrk==1:T enough?
 ---------------------------------------------------
-postdraw, svarpostdraw, irfband, plotir:  remove redundancy in draws between 
-SVARpostdraw and irfband.  Is plotir even necessary?
+postdraw, SVARpostdraw, irfband, plotir:  remove redundancy in draws between 
+SVARpostdraw and irfband.  plotir() is used by irfBand.  It does the actual
+layout and plotting.  
+Both postdraw programs gnerate draws from the posterior on coefficients.  The 
+rf version does Gibbs sampling starting from somewhere near the peak.  The SVAR 
+version uses draws of A0 and lmd already generated via some form of MCMC, to 
+generate draws of the rf coefficients, accompanied by the corresponding A and 
+lmd.  *Its current version (2021/7/4) also computes the irf's themselves. 
+This is redundant, since they are also computed in irfBand().*  The reason for 
+doing this in two steps is that, because we can draw easily from the exact 
+conditional distribution, we need only a thinned version of the A, lmd draws to 
+work from.  There should be a function (not, as curently, just a script) to do 
+the A, lmd draws 
+-----------------------------------------------------
+There should be programs that manage the pparams list and its defaults. There 
+should also be a similar program and list for parameters governing the A0, lmd 
+prior.
 -----------------------------------------------------------------
 panel var project.  Need to allow cross-country variation in parameters, but 
 with shrinkage toward a common form.  But also need a better way to introduce 

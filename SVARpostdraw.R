@@ -1,7 +1,6 @@
 #' Structural VAR full posterior draws
 #'
-#' From draws of `A` and `lambda`, generate draws of impulse response functions
-#' and all AR coefficients
+#' From draws of `A` and `lambda`, generate draws of all AR coefficients.
 #'
 #' @details
 #' Takes as input draws from the marginal on the contemporaneous coefficient
@@ -107,13 +106,14 @@ SVARpostdraw <- function(Adraws,
         By <- array(Byx[ , 1:(nvar * nLags)], c(nvar, nvar, nLags))
         Bydraw[ , , , id] <- By
         Bxdraw[ , , id] <- Byx[ , nvar * nLags + 1:nx, drop=FALSE] # constant is at end
-        irfdraw[ , , , id] <- impulsdtrf(vout=list(By=By), smat=Ai, nstep=horiz)
+        ## irfdraw[ , , , id] <- impulsdtrf(vout=list(By=By), smat=Ai, nstep=horiz)
+        ## irf's are drawn in irfBand(), not needed here.
         
     }
-    dimnames(irfdraw) <- list(dimnames(data)[[2]], as.character(1:nvar), NULL)
+    ## dimnames(irfdraw) <- list(dimnames(data)[[2]], as.character(1:nvar), NULL)
     dimnames(Adraws) <- list(NULL, as.character(1:nvar), dimnames(data)[[2]] )
     dimnames(Bydraw) <- list(dimnames(data)[[2]], dimnames(data)[[2]], NULL, NULL)
-        return(list(irf=irfdraw, By=Bydraw, Bx=Bxdraw, A=Adraws, lmd=lmddraws))
+        return(list(By=Bydraw, Bx=Bxdraw, A=Adraws, lmd=lmddraws))
 }
 
 
