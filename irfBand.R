@@ -28,7 +28,9 @@ irfBand <- function(pdout, smat=NULL, nstep=40, order=NULL, pctiles=c(5, 16, 50,
     if (!is.null(pdout$A) ) {           #SVAR case
         smat <- array(0, c(nv, nv, ndraw))
         for (id in 1:ndraw) smat[ , , id] <- solve(pdout$A[id, , ])
-        dimnames(smat) <- list(dimnames(pdout$A)[[2]], dimnames(pdout$A)[[1]], NULL)
+        dimnames(smat) <- list(var=dimnames(pdout$A)[[3]],
+                               shock=dimnames(pdout$A)[[2]],
+                               NULL)
     } else {
         if (!is.null(smat)) {               #using explicit smat argument
             if (length(dim(smat)) < 3) {    #making it an array if it isn't one.

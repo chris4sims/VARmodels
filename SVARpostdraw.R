@@ -22,7 +22,10 @@
 #'
 #' Note that to get structural irf's from the output of SVARpostdraw, The `smat`
 #' argument of `irfBand must be an array containing the inverses of the arrays in
-#' the `A` returned value from this program. 
+#' the `A` returned value from this program.
+#'
+#' Note that while the returned `By` and `Bx` have the draw index last, the returned
+#' `A` and `lmd` have the draw index first (as do the inputs).
 #' 
 #'
 #' `pparam' is a list with elements
@@ -51,12 +54,11 @@
 #'                VAR prior parameters.  `asig` is the weight on the A0 prior.
 #' @param horiz The number of periods over which to compute impulse responses.
 #'
-#' @return \item{irf}{nvar x nvar x horiz x ndraw array of impulse responses}
-#'         \item{By}{nvar x nvar x nlags x ndraw array of  reduced form VAR coefficients}
+#' @return \item{By}{nvar x nvar x nlags x ndraw array of  reduced form VAR coefficients}
 #'         \item{Bx}{nvar x nx x ndraw array of reduced form VAR exogenous, then
 #'                   constant, coefficients.  (Just constants when there are no x's)}
-#'         \item{A}{nvar x nvar x ndraw array of A0 draws}
-#'         \item{lmd}{nvar x nsig x ndraw array of lmd draws}
+#'         \item{A}{ndraw x nvar x nvar array of A0 draws}
+#'         \item{lmd}{ndraw x nvar x nsig array of lmd draws}
 #' @export
 #' @md
 SVARpostdraw <- function(Adraws,
@@ -113,7 +115,7 @@ SVARpostdraw <- function(Adraws,
     ## dimnames(irfdraw) <- list(dimnames(data)[[2]], as.character(1:nvar), NULL)
     dimnames(Adraws) <- list(NULL, as.character(1:nvar), dimnames(data)[[2]] )
     dimnames(Bydraw) <- list(dimnames(data)[[2]], dimnames(data)[[2]], NULL, NULL)
-        return(list(By=Bydraw, Bx=Bxdraw, A=Adraws, lmd=lmddraws))
+    return(list(By=Bydraw, Bx=Bxdraw, A=Adraws, lmd=lmddraws))
 }
 
 
