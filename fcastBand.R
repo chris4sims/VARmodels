@@ -1,9 +1,11 @@
 #' VAR forecasts with error bands  
 #'
-#' Uses output from \code{postdraw} to construct forecasts with error bands.
+#' Uses output from `postdraw(}` or `SVARpostdraw()` to construct forecasts with error bands.
 #' The return value is a large array, giving all the sampled forecasts, unsorted..
 #' 
-#' @param pdout  Output from postdraw.
+#' @param pdout  Output from `postdraw` or `SVARpostdraw()`.
+#' @param regime An integer, indicating column of lmd to use for relative shock
+#'               variances. 0 means use 1's (the "average"). Leave at 0 for rf case.
 #' @param smat If NULL, the transpose of \code{pdout$smat[ , , draw]} is used as
 #'              initial shocks.  Otherwise, this array is used, not transposed. Can be
 #'              a single array, which is used repeatedly.
@@ -23,14 +25,42 @@
 #' but can be assigned if you want to keep it.
 #'
 #' @export
-fcastBand <- function(pdout, y0, horiz=40, pctiles=c(5, 16, 50, 84, 95), whichv=NULL, whichs=NULL, main="Forecasts with bands", file="FcastBandPlot.pdf", xdata=NULL, const=TRUE) {
+#' @md
+fcastBand <- function(pdout, regime=0, y0, horiz=40, pctiles=c(5, 16, 50, 84, 95),
+                      whichv=NULL, whichs=NULL, main="Forecasts with bands",
+                      file="FcastBandPlot.pdf", xdata=NULL, const=TRUE)
+{
     if(is.null(dim(y0))) {
         dim(y0) <- c(length(y0), 1) #univariate case
     }
     lags <- dim(y0)[1]
     nv <- dim(pdout$By)[1]
     ndraw <- dim(pdout$By)[4]
-    smat <- pdout$smat 
+    if (!is.null(pdout$A) ) {           #SVAR case
+        smat <- array(0, c(nv, nv, ndraw))
+        for (id in 1:ndraw) {
+            smat[ , , id] <- solve(pdout$A[id, , ])
+            if(regime > 0) smat[ , , id] <- smat[ , , id] %*% diag(pdout$lmd[id, , regime])
+        }
+        dimnames(smat) <- list(var=dimnames(pdout$A)[[3]],
+                               shock=dimnames(pdout$A)[[2]],
+                               NULL)
+    } else {                             #rf case
+        if (!is.null(smat)) {               #using explicit smat argument
+            if (length(dim(smat)) < 3) {    #making it an array if it isn't one.
+                smat <- array(smat, c(dim(smat), ndraw))
+            }
+        } else {                            #using smat from pdout, non-SVAR
+            smat <- pdout$smat
+            if (nv > 1) {
+                if(!is.null(order)){
+                    for (id in 1:ndraw) smat[ , , id] <- pchol(crossprod(smat[ , , id]), order)
+                }
+                smat <- aperm(pdout$smat, c(2,1,3)) #transposing
+                dimnames(smat) <- list(NULL, dimnames(pdout$By)[[1]], NULL)
+            }    
+        }
+    }
     ns <- dim(smat)[2]
     fc <- array(0, c(horiz + lags, nv, ndraw))
     if (is.null(whichv)) whichv <- 1:nv
@@ -39,7 +69,7 @@ fcastBand <- function(pdout, y0, horiz=40, pctiles=c(5, 16, 50, 84, 95), whichv=
     for (id in 1:ndraw) {
         By <- pdout$By[ , , , id, drop=FALSE]
         dim(By) <- dim(By)[1:3]         #in 1x1 case, need to keep initial 3d, not 4th
-        if(!(whichs==0)) {
+        if(!identical(whichs,0)) {
             shocks <- matrix(rnorm(nv * horiz), horiz, nv)
             shocks <- shocks %*% smat[ , , id]
         } else {
