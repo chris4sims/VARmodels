@@ -21,6 +21,7 @@
 #' 
 #' @return nvar x nshocks x nstep x ndraw array of impulse responses.  Returned value is not printed, but can be assigned if you want to keep it.
 #'
+#' @md
 #' @export
 irfBand <- function(pdout, smat=NULL, nstep=40, order=NULL, pctiles=c(5, 16, 50, 84, 95), whichv=NULL, whichs=NULL, main="IRF's with bands", file="IRFwBandPlot.pdf") {
     nv <- dim(pdout$By)[1]
@@ -31,7 +32,7 @@ irfBand <- function(pdout, smat=NULL, nstep=40, order=NULL, pctiles=c(5, 16, 50,
         dimnames(smat) <- list(var=dimnames(pdout$A)[[3]],
                                shock=dimnames(pdout$A)[[2]],
                                NULL)
-    } else {
+    } else {                             #rf case
         if (!is.null(smat)) {               #using explicit smat argument
             if (length(dim(smat)) < 3) {    #making it an array if it isn't one.
                 smat <- array(smat, c(dim(smat), ndraw))
