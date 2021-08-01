@@ -1,40 +1,65 @@
 #'Minnesota prior
 #'
-#'Generates dummy observations for a Minnesoat prior on a VAR
+#'Generates dummy observations for a Minnesota prior on a VAR.
 #'
-#' Output of this function is used in \code{\link{mgnldnsty}}, and can
-#' be used with \code{\link{rfvar3}}.
+#' Output of this function is used in `rfmdd(}` and `sfmdd()`, and can
+#' be used with `rfvar()`.
 #' \subsection{mnprior$tight}{weight on the Minnesota prior dummies.  Prior std
 #'      dev on first lag is \code{1/tight}}
 #' \subsection{mnprior$decay}{Prior std deviation of coefficients decline with
-#'      lag \code{j} as \code{1/j^decay}}
+#'      lag \code{j} as \code{1/j^decay}
 #' \subsection{vprior$sigma}{vector of scales of residual std deviations. Even
 #'       if the prior on variances is not used (\code{w=0}), this is needed for
 #'       construction of the rest of the prior.}
 #' \subsection{vprior$w}{Weight on prior dummy observations asserting residual
 #'       variances match \code{vprior$sigma}.}
-#' \subsection{urprior}{For \code{urprior} hyperparameters see
-#' \code{\link{rfvar3}}.  The elements of either \code{urprior} or
-#' \code{mnprior} can be set to \code{NULL}, eliminating the corresponding dummy
-#' observations, and the elements of \code{urprior} must be set to \code{NULL}
-#' if the output is to be used in \code{rfvar3} with non-null \code{lambda,mu}
-#' there.}
+#' \subsection{urprior} { `lambda is the weight on prior beliefs that when all
+#' lagged variables have been constant, current variables will persist at the
+#' same value.  `lambda < 0` implies the constant term is not included in the
+#' corresponding dummy observation (usually not a good idea.) The elements of
+#' either \code{urprior} or \code{mnprior} can be set to \code{NULL},
+#' eliminating the corresponding dummy observations.}
+#' \subsection{`ybar`} By default `ybar` is set to the mean of the initial
+#' conditions vector.  Setting `ybar` as non-NULL overrides that.  The `lambda`
+#' and `mu` dummy observations use `ybar` and (possibly) `xbar` as the
+#' persistent levels.}
+#' \subsection{OwnLagMeans} If a single numeric value, the prior mean of the
+#' first own lag coefficient in all equations.  If a numeric vector of length
+#' m, the prior mean of the first m lag coefficients in all equations.  If a
+#' `nv` by m matrix, the prior means of the first m lags in all equations,
+#' possibly varying across equations.
+#'
+#' The default is close to the optimal second-order univariate AR coefficients
+#' when the variable is a unit-averaged continuous time Wiener process.  This
+#' works well for variables like GDP or investment, which cumulate through time.
+#' For data that are sampled rather than averaged, like some financial or price
+#' data, `OwnLagMeans=1` is better.  For non-persistent or differenced variables,
+#' `OwnLagMeans=0` might be better.  `OwnLagMeans` can be an nv-row matrix, implying
+#' a different univariate AR mean for each variable.  With, e.g., a row of the
+#' form `c(0,0,0,1)` or c(1,0,0,1,-1), this could be useful for data including
+#' seasonal variation with quarterly data.
+#'
+#' `lambda` and `mu` actually pull the prior toward "persistence" only when
+#' the sum of coefficients on the own lag is one.  Otherwise they just pull
+#' toward `sum(OwnLagMeans) * ybar = ybar`.  In all cases, though, the `lambda`
+#' and `mu` components make the prior tighter on sums of coefficients than on
+#' individual coefficents.
 #'
 #' @param nv number of endogenous variables
 #' @param nx number of exogenous variables
 #' @param lags number of lags
-#' @param mnprior list of individual-coefficient prior hyperparmaters
+#' @param mnprior list of individual-coefficient prior hyperparameters
 #' @param vprior list of scale factors and weight on shock size priors
 #' @param urprior list of hyperparameters for unit root and cointegration prior
 #' @param xsig rough scale of \code{x} variables
 #' @param ybar scale of persistence dummy observations
 #' @param xbar scale of persistence dummy observation \code{x} values
-#' @param nstat where \code{TRUE}, the variable is persistent
+#' @param OwnLagMeans prior expectation of own lags.  See details.
 #'
 #' @return \item{ydum}{dummy observations on y}
 #'         \item{xdum}{dummy observations on x}
 #'         \item{pbreaks}{locations of breaks in the dummy observations}
-#'
+#' @md
 #' @export
 varprior <-
     function(nv=1,nx=0,lags=1,mnprior=list(tight=5,decay=.5),vprior=list(sig=1,w=1),
@@ -104,7 +129,23 @@ varprior <-
             ## note that xvalues for obsno 2:(lags+1) don't matter.  This is one dummy obseervation,
             ## so only the "current" x is used.
         }
-        ydum[1,,1,] <- diag(vprior$sig * nstat, nv, nv) # so own lag has mean zero if nstat FALSE
+        nown <- length(OwnLagMeans)
+        if (is.matrix(OwnLagMeans)) {
+            nown <- dim(OwnLagMeans)[2]
+            if (dim(OwnLagMeans)[[2]] < lags) {
+                OwnLagMeans <- cbind(OwnLagMeans, matrix(0, nv, lags - nown))
+            }
+        } else if ( is.vector(OwnLagMeans)) {
+            nown <- length(OwnLagMeans)
+            OwnLagMeans <- matrix(c(rep(OwnLagMeans, each=nv), rep(0, (lags - nown) * nv))
+                                , nv, lags)
+        } else {
+            OwnLagMeans <- matrix(c(rep(OwnLagMeans, nv), rep(0, nv * (lags - 1))))
+        }
+        ## ydum[1,,1,] <- diag(vprior$sig * nstat, nv, nv) # so own lag has mean zero if nstat FALSE
+        for (jv in 1:nv) {
+            ydum[1, jv, , jv] <- vprior$sig * OwnLagMeans[jv, ] #
+        }
         ydum <- mnprior$tight * ydum
         dim(ydum) <- c(lags+1,nv,lags*nv)
         ydum <- ydum[seq(lags+1,1,by=-1),,]
@@ -120,6 +161,7 @@ varprior <-
     if (!is.null(urprior$lambda) ) {
         ## lambda obs.  just one
         ydumur <- matrix(ybar, nrow=lags+1, ncol=nv, byrow=TRUE) * abs(urprior$lambda)
+        ydumur[1, ] <- apply(OwnLagMeans, 1, sum) * ybar
         ydumur <- array(ydumur, c(dim(ydumur), 1))
         if(urprior$lambda > 0) {
             xdumur <- matrix(xbar, lags + 1, nx, byrow=TRUE) * urprior$lambda # (all but first row redundant)
@@ -134,12 +176,11 @@ varprior <-
     if (!is.null(urprior$mu)) {
         ## 
         ydumuri <-array(0, c(lags+1, nv, nv))
-        for (iv in which(nstat)) {
-            ydumuri[ , iv, iv] <- ybar[iv]
+        sumOLM <- apply(OwnLagMeans, 1, sum)
+        for (iv in 1:nv) {
+            ydumuri[-1 , iv, iv] <- ybar[iv]
+            ydumuri[1, iv, iv] <- sumOLM * ybar[iv]
         }
-        ## ydumuri <- ydumuri[ , , nstat]    #dropping all-zero dummy obs
-        ## not necessary to drop, and not dropping makes interpreting ydum
-        ## easier.
         ydumur <- abind(ydumur, urprior$mu *ydumuri, along=3)
         xdumur <- abind(xdumur, array(0, c(lags+1, nx, nv)), along=3)
     }
