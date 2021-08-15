@@ -2,9 +2,31 @@ Have rfvar and svar, two programs that estimate var's using dummy observation
 priors, but without normalizing the prior, and thus possibly with improper 
 priors.  Both call varprior to set up dummy obs.  (I.e., need to remove 
 rfvar3's redundant generation of dobs.  
+---------------------------------
+July 26, 2021:  rfvar() now done.  takes ydata and breaks as input, does
+not take prior parameters as input.  Prior parameters accepted by rfmdd()
+(new version of mgnldnsty), not yet done.  Make sure a standard format of 
+pparams works in both varprior() and rfmdd().  
 
-Then rfmdd (new name for mgnldnsty) and svarmdd use the first two above, 
-respectively, to calculate mdd's with normalized priors.
+----------------------------------------------
+8/6/21: rfmdd() plans below all done and through prelliminary testing.  Input
+data, if there are breaks, is in the form of a list of ts objects.
+It allows specifying arbitrary own-AR prior mean coefficients, variable by
+variable.  This may substitute for shrinking off-diagonal coefficients.
+---------------------------------------------------------------------
+rfmdd() should be able to take 
+date information about breaks and preserve that in its output.  It should (as 
+mgnldnsty() already does) allow for training samples.
+
+It should also, instead of just 1 or 0 (nstat TRUE and FALSE) for the prior 
+mean coefficient on first own lag as in the current code, allow also c(1.25, 
+-.25) as the means for the first two lags.  These are approximately the 
+coefficients of the best second-order predictor for a univariate process that 
+is formed as unit-averages of a continuous time Wiener process.
+-----------------------------------------------------------------
+8/6/21:  Unresolved issue with rfmdd():  Does it handle non=trivial xdata?  What
+is interpretation of xsig in that case?
+----------------------------------------------
 
 svar takes A0 and lmd as given, uses equation-by-equation fit, allows weighted 
 observations.  (via lmd.  Separately as t-errors, or just dim(lmd)[2]==T?
@@ -13,6 +35,20 @@ rfvar uses svd, so can handle singular rhs matrix, uses default prior with mu
 and lambda only.
 
 Above can all be done on one git branch.
+-------------------------------------------------
+varprior: Besides implementing the MN prior (as now) it should also facilitate 
+entering arbitrary prior dummy obs's as (nlags+1) x nvar matrix
+--------------------------------------------------
+
+Documentation files placed in /inst/doc of the package directory will be
+linked to in the index formed at package installation.  Do this with the pdf 
+documentation for the Minnesota prior.  Will a @seealso link to it by filename 
+in the .Rd file of a function work?
+---------------------------------------------------
+8/14/21 have finished restructuring varprior() and mgnldnsty() (now rfmdd()), 
+but still need to remove excessive documentation, link to the MN prior pdf, 
+clean out old comments, and test with data.
+
 --------------------------------------------------
 bvarwrap:  include A0,lmd prior parameters in parameter list.
 restore t-errors option?  Or is Tsigbrk==1:T enough?
@@ -31,11 +67,15 @@ fcastBand() should, like irfBand, recognize SVAR vs rf pdout arg, so that
 population of smat with A0i not needed outside the program.
 ---------------------------------
 There should be a function (not, as curently, just a script) to do 
-the A, lmd draws 
+the A, lmd draws.  Conditional on A, might lmd posterior have closed form?
 -----------------------------------------------------
 There should be programs that manage the pparams list and its defaults. There 
 should also be a similar program and list for parameters governing the A0, lmd 
 prior.
+
+9/6/21:  Not sure about this.  Maybe best left to the user.  Full default list 
+of params is there in arguments of rfmdd(). With verbose options the list, with 
+numerical values, is returned.
 -----------------------------------------------------------------
 panel var project.  Need to allow cross-country variation in parameters, but 
 with shrinkage toward a common form.  But also need a better way to introduce 

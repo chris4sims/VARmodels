@@ -118,6 +118,8 @@ rfvar <- function(ydata=NULL,
         } else {
             xnames <- rep(" ",times=nx)
         }
+    } else {
+        xnames <- NULL
     }
     dimnames(By) <- list(ynames,ynames,as.character(1:lags))
     xxinames <- c(paste(rep(ynames,lags),rep(1:lags, each=length(ynames)),sep=""),xnames)
