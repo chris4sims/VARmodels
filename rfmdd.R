@@ -13,22 +13,23 @@
 #'     deviation over \code{lags} past periods and other variables have
 #'     not deviated, the deviation in y_i will tend to persist.
 #'     There is one of these dummy observations for each variable.}
-#' \subsection{mnprior$tight}{weight on the Minnesota prior dummies.  Prior std
-#'      dev on first lag is \code{1/tight}}
-#' \subsection{mnprior$decay}{Prior std deviation of coefficients decline with
+#' \subsection{tight}{weight on the Minnesota prior dummies.  Prior std
+#'      dev on first lag is \code{1/tight}.  If NULL, these dummy observations
+#'      are not used.}
+#' \subsection{decay}{Prior std deviation of coefficients decline with
 #'      lag \code{j} as \code{1/j^decay}}
-#' \subsection{vprior$sigma}{vector of scales of residual std deviations. Even
+#' \subsection{sigma}{vector of scales of residual std deviations. Even
 #'       if the prior on variances is not used (\code{w=0}), this is needed for
 #'       construction of the rest of the prior.}
-#' \subsection{vprior$w}{Weight on prior dummy observations asserting residual
-#'      variances match \code{vprior$sigma}.}
+#' \subsection{w}{Weight on prior dummy observations asserting residual
+#'      variances match \code{sigma}.}
 #' \subsection{train}{ Prior times likelihood to this point in the sample is
 #'     weighted to integrate to 1, and therefore is treated as if it were itself
 #'     the prior. To do a pure training sample prior, set
-#'      \code{lambda=mu=0, mnprior=NULL, vprior$w=0, train>lags.}}
+#'      \code{lambda=mu=0,w=0, train>lags.}}
 #' \subsection{nonorm}{Useful to duplicate results obtained by others, to use
 #'     dummy observations that do not imply a proper prior, or to save computing
-#'       time in case only the posterior on this models parameters, not the
+#'       time in case only the posterior on this model's parameters, not the
 #'       weight on the model, is needed.}
 #' \subsection{OwnLagMeans} If a single numeric value, the prior mean of the
 #' first own lag coefficient in all equations.  If a numeric vector of length
@@ -54,8 +55,6 @@
 #'              dates.
 #' @param const Create constant term (with no need for column of ones in
 #'              \code{xdata})?
-#' #' @param lambda Weight on the co-persistence prior dummy observation.
-#' @param mu Weight on variable-by-variable sum of coeffs dummy obs.
 #' @param tight Overall tightness of prior.  Larger is tighter.
 #' @param decay Prior standard deviations of coefficients decrease as
 #'             `1/lag^decay`.
@@ -64,6 +63,8 @@
 #'            for scaling other parts of the prior.
 #' @param w weight on prior dummy observations pulling residual standard
 #'          deviations toward `sig`.
+#' @param lambda Weight on the co-persistence prior dummy observation.
+#' @param mu Weight on variable-by-variable sum of coeffs dummy obs.
 #' @param OwnLagMeans Prior expectation of own lag coefficients.  See details.
 #' @param train If non-zero, point in the sample where the training sample ends.
 #' @param flat Omit conventional uninformative prior on \code{Sigma}?
@@ -90,7 +91,7 @@
 #' @md
 #'@export
 #'
-mgnldnsty <- function(ydata,lags,xdata=NULL, const=TRUE, lambda=5,mu=1,tight=3,decay=.5,
+rfmdd <- function(ydata,lags,xdata=NULL, const=TRUE, lambda=5,mu=1,tight=3,decay=.5,
                       sig=rep(.01, dim(ydata)[2]), w=1, OwnLagMeans = c(1.25, -.25),
                       train=0, flat=FALSE, nonorm=FALSE, ic=NULL, verbose=TRUE) {
 ### ydata:        
@@ -155,7 +156,7 @@ mgnldnsty <- function(ydata,lags,xdata=NULL, const=TRUE, lambda=5,mu=1,tight=3,d
         ybar <- ic[1:nv]
         xbar <- ic[nv + 1:nx]
     }
-    vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, w=w, lambda=lambda, mu=mu, ybar=ybar, xbar=xbar, OwnLagMeans=OwnLagMeans)
+    vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, w=w, lambda=lambda, mu=mu, xsig=xsig, ybar=ybar, xbar=xbar, OwnLagMeans=OwnLagMeans)
     ## vp$: ydum,xdum,pbreaks
     var = rfvar(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum), breaks = c(breaks, T + vp$pbreaks)) 
     Tu <- dim(var$u)[1]
