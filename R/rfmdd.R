@@ -125,7 +125,7 @@ rfmdd <- function(ydata,lags,xdata=NULL, const=TRUE, lambda=5,mu=1,tight=3,decay
                    lambda=lambda, mu=mu, xsig=xsig, ybar=ybar, xbar=xbar,
                    OwnLagMeans=OwnLagMeans)
     ## vp$: ydum,xdum,pbreaks
-    var = rfvar(ydata=rbind(ydata, vp$ydum), lags=lags,
+    var <- rfvar(ydata=rbind(ydata, vp$ydum), lags=lags,
                 xdata=rbind(xdata,vp$xdum), breaks = c(breaks, T + vp$pbreaks)) 
     Tu <- dim(var$u)[1]
     if ( var$snglty > 0 ) {
