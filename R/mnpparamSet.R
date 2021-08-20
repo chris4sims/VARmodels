@@ -1,3 +1,12 @@
+#' Set VAR prior parameters
+#'
+#' Returns a default list of parameters, or allows varying elements of the list.
+#'
+#' This could be useful in documenting results.  If the list returned from this
+#' program (call it `mnplist') is used in
+#' `with(mnplist, varprior(nx, lags, mnprior, vprior, [etc])',
+#' you have the actual, evaluated arguments in 'mnplist'.
+#' 
 mnpparamSet <- function(nv=1,
                         nx=1,
                         lags=3,

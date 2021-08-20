@@ -22,7 +22,8 @@
 #' @param breaks Vector of row numbers in `ydata` and `xdata` after which
 #'               there is a break.
 #' 
-#' @return \item{By}{nvar x nvar x lags array of coefficients on lagged ys.
+#' @return \description{
+\item{By}{nvar x nvar x lags array of coefficients on lagged ys.
 #'     1st dimension is equation number}
 #'    \item{Bx}{nvar x nx matrix of coefficients on x}
 #'    \item{u}{Residuals. Note that This matrix will have fewer rows than
@@ -33,6 +34,7 @@
 #'    \item{snglty}{ Usually 0.  If the rhs variable matrix is not full column
 #'       rank, this is the gap between the number of columns and the
 #'       number of non-zero singular values.
+#'}
 #'}
 #' @md
 #' @export
