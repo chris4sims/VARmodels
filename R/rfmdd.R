@@ -50,6 +50,8 @@
 #'            for scaling other parts of the prior.
 #' @param w weight on prior dummy observations pulling residual standard
 #'          deviations toward `sig`.
+#' @param xsig Scales of variation in `x` variables.  If non-NULL, the last
+#'             element matches the constant and should usually be zero.
 #' @param lambda Weight on the co-persistence prior dummy observation.  If
 #'               negative, does not include x's in the dummy observation.
 #' @param mu Weight on variable-by-variable sum of coeffs dummy observations.
@@ -80,27 +82,56 @@
 #' @md
 #'@export
 #'
-rfmdd <- function(ydata,lags,xdata=NULL, const=TRUE, lambda=5,mu=1,tight=3,decay=.5,
-                      sig=rep(.01, dim(ydata)[2]), w=1, OwnLagMeans = c(1.25, -.25),
-                      train=0, flat=FALSE, nonorm=FALSE, ic=NULL, verbose=TRUE) {
+rfmdd <- function(ydata,
+                  lags,
+                  xdata=NULL,
+                  const=TRUE,
+                  lambda=5,
+                  mu=1,
+                  tight=3,
+                  decay=.5,
+                  sig=rep(.01, dim(ydata)[2]),
+                  w=1,
+                  xsig=NULL,
+                  OwnLagMeans = c(1.25, -.25),
+                  train=0,
+                  flat=FALSE,
+                  nonorm=FALSE,
+                  ic=NULL,
+                  verbose=TRUE) {
     if (is.list(ydata)) {
         ylist <- ydata
+        if (!is.null(xdata)) {
+            xlist <- xdata
+            stopifnot("xdata must also be a list" = is.list(xdata))
+        }
         if (is.null(dim(ylist[[1]]))) {
             dim(ylist)[[1]] <- c(length(ylist[[1]]), 1)
         }
         nv <- ncol(ylist[[1]])
         ydata <- matrix(0, 0, nv)
+        if (!is.null(xdata)) {
+            nx <- ncol(xlist[[1]])
+            xdata <- matrix(0, 0, nx)
+        }
         nblock <- length(ylist)
         for (il in 1:nblock) {
             ydata <- rbind(ydata, ylist[[il]])
+            if (!is.null(xdata)) {
+                xdata <- rbind(xdata, xlist[[i]])
+            }
         }
         breaks <- cumsum(sapply(ylist, function(x) dim(x)[1]))
         ## Here breaks includes end, unlike in calls to rfvar()  
     } else {
-        if (is.null(dim(ydata))) dim(ydata) <- c(length(ydata), 1)
+        if (is.null(dim(ydata))) {
+            dim(ydata) <- c(length(ydata), 1)
+        }
         ylist <- list(ydata)
+        xlist <- list(xdata)
         nblock <- 1
         nv <- ncol(ydata)
+        
         breaks <- nrow(ydata)
     }
     if (is.null(dim(ydata))) {
@@ -121,12 +152,12 @@ rfmdd <- function(ydata,lags,xdata=NULL, const=TRUE, lambda=5,mu=1,tight=3,decay
         ybar <- ic[1:nv]
         xbar <- ic[nv + 1:nx]
     }
-    vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, w=w,
-                   lambda=lambda, mu=mu, xsig=xsig, ybar=ybar, xbar=xbar,
-                   OwnLagMeans=OwnLagMeans)
+    vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, xsig=xsig,
+                   w=w, lambda=lambda, mu=mu, ybar=ybar,
+                   xbar=xbar, OwnLagMeans=OwnLagMeans)
     ## vp$: ydum,xdum,pbreaks
     var <- rfvar(ydata=rbind(ydata, vp$ydum), lags=lags,
-                xdata=rbind(xdata,vp$xdum), breaks = c(breaks, T + vp$pbreaks)) 
+                 xdata=rbind(xdata,vp$xdum), breaks = c(breaks, T + vp$pbreaks)) 
     Tu <- dim(var$u)[1]
     if ( var$snglty > 0 ) {
         warning( var$snglty, " redundant columns in rhs matrix")
