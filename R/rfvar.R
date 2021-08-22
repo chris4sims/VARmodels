@@ -7,7 +7,7 @@
 #' posterior (marginal data density), or distinguish dummy observations from
 #' data. `rfmdd()`, which can do all that, uses this program.
 #' 
-#' The prior is implmented outside this program with dummy observations, which
+#' The prior is implemented outside this program with dummy observations, which
 #' are included, after the "real" data, at the end of `ydata`.  The `breaks`
 #' vector specifies rows of `ydata` after which there are lags rows that are
 #' used as initial conditions for the next span of data.  Dummy observations
@@ -22,8 +22,8 @@
 #' @param breaks Vector of row numbers in `ydata` and `xdata` after which
 #'               there is a break.
 #' 
-#' @return \description{
-\item{By}{nvar x nvar x lags array of coefficients on lagged ys.
+#' @return \describe{
+#'    \item{By}{nvar x nvar x lags array of coefficients on lagged ys.
 #'     1st dimension is equation number}
 #'    \item{Bx}{nvar x nx matrix of coefficients on x}
 #'    \item{u}{Residuals. Note that This matrix will have fewer rows than
@@ -55,8 +55,10 @@ rfvar <- function(ydata=NULL,
         T2 <- dim(xdata)[1]
         nx <- dim(xdata)[2]
     } else {
-        T2 <- T; nx <- 0; xdata<- matrix(0,T2,0)
-    } 
+        T2 <- T
+        nx <- 0
+        xdata<- matrix(0,T2,0)
+    }
     ## note that x must be same length as y, even though first part of x will not be used.
     ## This is so that the lags parameter can be changed without reshaping the xdata matrix.
     ## ------------------------
