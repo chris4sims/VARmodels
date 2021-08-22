@@ -122,7 +122,6 @@ varprior <-
     } else {
         ydum <- NULL;
         xdum <- NULL;
-        breaks <- NULL;
     }
     if (!is.null(lambda) ) {
         ## lambda obs.  just one
@@ -173,18 +172,24 @@ varprior <-
         xdum2 <- NULL
     }
     ## stack everything up.
-    dim(ydum) <- c(lags + 1, nv, lags * nv) # merge all the individual mn dobs
-    dim(xdum) <- c(lags + 1, nx, lags * nv)
-    ydum <- abind(ydum, ydumur, ydum2, along=3)
-    xdum <- abind(xdum, xdumur, xdum2, along=3)
-    breaks <- (lags+1) * (1:(dim(ydum)[3] -1)) # end of sample is not a "break".
-    ydum <- aperm(ydum, c(1, 3, 2))
-    ydum <- matrix(ydum, ncol=dim(ydum)[3])
-    xdum <- aperm(xdum, c(1,3,2))
-    xdum <- matrix(xdum, ncol=dim(xdum)[3])
-    dimnames(ydum) <- list(NULL, names(sig))
-    if (!is.null(xsig)) {
-        dimnames(xdum) <- list(NULL, names(xsig))
+    if (!is.null(ydum)) {
+        dim(ydum) <- c(lags + 1, nv, lags * nv) # merge all the individual mn dobs
+        ydum <- abind(ydum, ydumur, ydum2, along=3)
+        breaks <- (lags+1) * (1:(dim(ydum)[3] -1)) # end of sample is not a "break".
+        ydum <- aperm(ydum, c(1, 3, 2))
+        ydum <- matrix(ydum, ncol=dim(ydum)[3])
+        dimnames(ydum) <- list(NULL, names(sig))
+    } else {
+        breaks <- NULL
+    }
+    if (! is.null(xdum)) {
+        dim(xdum) <- c(lags + 1, nx, lags * nv)
+        xdum <- abind(xdum, xdumur, xdum2, along=3)
+        xdum <- aperm(xdum, c(1,3,2))
+        xdum <- matrix(xdum, ncol=dim(xdum)[3])
+        if (!is.null(xsig)) {
+            dimnames(xdum) <- list(NULL, names(xsig))
+        }
     }
     return(list(ydum=ydum,xdum=xdum,pbreaks=breaks))
 }
