@@ -1,0 +1,18 @@
+Package: VARmodels
+Title: Estimate Vector Autoregressive Models
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Chris",
+           family = "Sims",
+           role = c("aut", "cre"),
+           email = "sims@princeton.edu",
+           comment = c(ORCID = "0000-0002-5479-9757"))
+Description: Estimates reduced-form or structural VAR's.  Plots impulse
+    responses with error bands based on sampling from the posterior.  The
+    data can be in a list of blocks, to allow for panel.  The SVAR programs
+    can allow for time varying variances and use them for identification.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
