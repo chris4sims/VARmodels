@@ -1,19 +1,33 @@
-fcastCndl <- function(y0, Ay, Ax, xdata=NULL, const=TRUE, horiz, R=NULL, g=NULL, whichShocks=rep(TRUE, dim(y0)[2]), yr=NULL) {
-### model is Ay(L)y = Ax(L)x + eps with eps N(0,I).
-### function returns a horiz-step forecast conditional on given values for
-### certain linear combinations of y's (e.g. a path for some variable).
-### The conditioning information is R*y = g, where y is the (lags + horiz) x nv
-### data and forecast matrix, stacked.
-### The conditional forecast will be generated using the shocks for which whichShocks is TRUE.
-### Alternatively, a horiz x nv matrix can be provided witn NaN values in all positions
-### except those at values of $y$ that are constrained, and the constrained values
-### in other positions.
-### Note that if a reduced form VAR y=By(L)y+e is being used, Ay(L) is I - By(L) only if Var(e)=I.
-### If Var(e)=Sigma in the reduced form, A(L) = S %*% (I-B(L)), where S %*% Sigma %*% t(S) = I.
-###
+#' Conditional forecast 
+#'
+#' Forecast conditional on some future `y` values and on zero values for some
+#' shocks.
+#'
+#' Model is an SVAR: \eqn{Ay(L)y = Ax(L)x + \eps} with \eqn{\eps ~ N(0,I)}.
+#' The conditioning information is `R %*% y = g`, where `y` is the `(lags + horiz)`
+#' by `nv` data and forecast matrix, stacked into a single vector.
+#' @details
+#' The conditional forecast will be generated using the shocks for which
+#' `whichShocks == TRUE`.  Alternatively, a horiz x nv matrix can be
+#' provided witn NaN values in all positions except those at values of
+#' $y$ that are constrained, and the constrained values in other positions.
+#' Note that if a reduced form VAR y=By(L)y+e is being used, Ay(L) is I - By(L)
+#' only if Var(e)=I.  If Var(e)=Sigma in the reduced form,
+#' A(L) = S %*% (I-B(L)), where S %*% Sigma %*% t(S) = I. Of course the choice
+#' of S affects the result in this case.
+#'
+#' @export
+#' @md
+
+fcastCndl <- function(y0, Ay, Ax,
+                      xdata=NULL, const=TRUE,
+                      horiz, R=NULL, g=NULL,
+                      whichShocks=rep(TRUE, dim(y0)[2]),
+                      yr=NULL) {
   nv <- dim(y0)[2]
   lags <- dim(y0)[1]
   By <- -solve(Ay[ , , 1], matrix(Ay, nrow=dim(Ay)[1]))
+  A0i <- -By[ , , 1]
   By <- array(By, dim(Ay))[ , , -1]
   ## By <- tensor(-A0i, Ay[ , , -1], 2, 1)
   ## Bx <- solve(Ay[ , , 1], Ax)
@@ -42,7 +56,7 @@ fcastCndl <- function(y0, Ay, Ax, xdata=NULL, const=TRUE, horiz, R=NULL, g=NULL,
   ## form vcv
   Aym <- -Ay
   Aym[ , ,1] <- -Aym[ , , 1]
-  mar <- impulsdt(Aym, horiz)
+  mar <- impulsdtrf(By, smat=A0i)
   marMat <- array(0, c(nv, nv, horiz, horiz))
   for (ir in 1:horiz) {
     marMat[ , , ir, ir:1] <- mar[ , , 1:ir]
