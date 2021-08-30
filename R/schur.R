@@ -1,16 +1,25 @@
+#' Schur decomposition
+#'
+#' A front end for lapack complex schur decomposition `zgees`.
+#' @param A The matrix to be decomposed
+#'
+#' @export
+#' @md
+#' 
 schur <- function(A) {
     ## Matrix::Schur would provide a more platform-independent approach.
     ## But to use schdiv(), would need to post-process Schur output to
     ## get full complex, fully triangular, T.
-  if ( !is.loaded("zgees")) dyn.load("/usr/lib/liblapack.so")
+  if ( !is.loaded("zgees")) dyn.load("/usr/lib/liblapack.so", local=TRUE)
   if (is.null(dim(A))) dim(A) <- c(1,1)
   if ( dim(A)[1] ==0) return(list(X=matrix(0,0,0), info=0))
   n <- dim(A)[1]
   n <- as.integer(n)
   sdim <- as.integer(0)
-  schout <- .Fortran("zgees", "V","N","dum", n, T=as.complex(A), n, sdim, ev=complex(n), Q=complex(n*n), n,
-                     work=complex( 33 * n ), LWORK=as.integer(33 * n), rwork = double(n),
-                     bwork = "dum", info=integer(1))
+    schout <- .Fortran("zgees", "V","N","dum", n, T=as.complex(A), n, sdim,
+                       ev=complex(n), Q=complex(n*n), n,
+                       work=complex( 33 * n ), LWORK=as.integer(33 * n), rwork = double(n),
+                       bwork = "dum", info=integer(1))
   return(list(Q=matrix(schout$Q,n), T=matrix(schout$T,n)))
   ##       SUBROUTINE ZGEES( JOBVS, SORT, SELECT, N, A, LDA, SDIM, W, VS,
   ##      $                  LDVS, WORK, LWORK, RWORK, BWORK, INFO )
