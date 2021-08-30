@@ -48,7 +48,7 @@ rfvar <- function(ydata=NULL,
     T <-dim(ydata)[1]
     nvar <- dim(ydata)[2]
     ##nox=isempty(xdata)
-    nox <- identical(xdata,NULL)
+    nox <- is.null(xdata)
     ## Note that usually, if there is a constant, dummy observations for the prior
     ## will not simply be all ones.
     if(!nox){
