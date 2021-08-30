@@ -106,13 +106,18 @@ rfmdd <- function(ydata,
             stopifnot("xdata must also be a list" = is.list(xdata))
         }
         if (is.null(dim(ylist[[1]]))) {
-            dim(ylist)[[1]] <- c(length(ylist[[1]]), 1)
+            lapply(ylist, function(x) matrix(x, ncol=1))
         }
         nv <- ncol(ylist[[1]])
         ydata <- matrix(0, 0, nv)
         if (!is.null(xdata)) {
+            if (is.null(dim(xlist[[1]]))) {
+                lapply(xlist, function(x) matrix(x, ncol=1))
+            }
             nx <- ncol(xlist[[1]])
             xdata <- matrix(0, 0, nx)
+        } else {
+            nx <- 0
         }
         nblock <- length(ylist)
         for (il in 1:nblock) {
@@ -134,23 +139,30 @@ rfmdd <- function(ydata,
         
         breaks <- nrow(ydata)
     }
-    if (is.null(dim(ydata))) {
-        dim(ydata) <- c(length(ydata), 1)
-    }
     T <- dim(ydata)[1]
     nv <- dim(ydata)[2]
     if (const) {
         xdata <- cbind(xdata, matrix(1,T,1))
     }
-    if (!is.null(xdata) ) stopifnot( dim(xdata)[1] == T)
-    Tx <- dim(xdata)[1]
-    nx <- dim(xdata)[2]
+    if (!is.null(xdata) ){
+        stopifnot( dim(xdata)[1] == T)
+        nx <- dim(xdata)[2]
+    } else {
+        nx <- 0
+    }
     if (is.null(ic)) {
         ybar <- apply(ydata[1:lags, , drop=FALSE], 2, mean)
-        xbar <- apply(xdata[1:lags, , drop=FALSE], 2, mean)
+        if (nx > 0) {
+            xbar <- apply(xdata[1:lags, , drop=FALSE], 2, mean)
+        } else {
+            xbar <- NULL
+        }
     } else {
         ybar <- ic[1:nv]
-        xbar <- ic[nv + 1:nx]
+        if (nx > 0) {
+            xbar <- ic[nv + 1:nx]
+        } else {
+            xbar  <-  NULL}
     }
     vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, xsig=xsig,
                    w=w, lambda=lambda, mu=mu, ybar=ybar,
@@ -178,8 +190,8 @@ rfmdd <- function(ydata,
     } else {
         Tp <- 0
         tbreaks <- NULL
-        ytrain <- matrix(0, 0, nv)
-        xtrain <- matrix(0, 0, nx)
+        ytrain <- NULL
+        xtrain <- NULL
     }
 
     if (!nonorm) {
