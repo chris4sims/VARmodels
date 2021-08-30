@@ -9,10 +9,13 @@
 #'
 #' @return The unconditional covariance matrix \code{V}.
 #' 
-#' @seealso \code{sysmat}, which takes the \code{By}, or \code{By} and \code{Bx}, components of
-#' \code{rfvar3} output  and forms the \code{A} matrix for a stacked 1st order system.
+#' @seealso \code{sysmat}, which takes the \code{var$By}, or \code{var$By}
+#' and \code{var$Bx}, components of \code{rfmdd} output  and forms the \code{A}
+#' matrix for a stacked 1st order system.
 #'
 #' @export
+#'
+#' @md
 #' 
 doubling <- function(A,omega,crit=1e-9) {
   V <- omega
