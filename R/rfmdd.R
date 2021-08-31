@@ -182,8 +182,7 @@ rfmdd <- function(ydata,
             warning("end of training sample <= # of lags, so training sample not used")       
         } else {
             Tp <- train
-            tbreaks <- c(breaks0
-                         [breaks < train], Tp)
+            tbreaks <- c(breaks[breaks < train], Tp)
             ytrain <- ydata[1:Tp,,drop=FALSE] 
             xtrain <- xdata[1:Tp,,drop=FALSE]
         }
