@@ -210,18 +210,22 @@ rfmdd <- function(ydata,
         pintp <- NULL
     }
     if(verbose) {
-        frq <- frequency(ydata)
-        if (nblock == 1) {
-            uts <- ts(var$u[1:(T-lags), ],
+         if (nblock == 1) {
+         frq <- frequency(ydata)
+         uts <- ts(var$u[1:(T-lags), ],
                       start=tsp(ydata)[1] + (lags - 1) / frq,
                       end=tsp(ydata)[2], freq=frq)
         } else {
             uts <- list(NULL)
             ubreaks <- c(0, breaks - lags * 1:nblock)
             for (ib in 1:nblock){
+                tspi <- tsp(ylist[[ib]])
+                frq <- tspi[3]
                 uts[[ib]] <- ts(var$u[(ubreaks[ib] + 1):ubreaks[ib+1], ],
-                                start=tsp(ylist[[ib]])[1] + lags / frq, freq=frq)
+                                start=tspi[1] + lags / frq, freq=frq)
+                dimnames(uts[[ib]]) <- list(NULL, dimnames(ylist[[ib]][[2]]))
             }
+            names(uts) <- names(ylist)
         }
         return(list(mdd=mdd, var=var, varp=varp, uts=uts,
                     prior=list(tight=tight, decay=decay, lambda=lambda, mu=mu,
