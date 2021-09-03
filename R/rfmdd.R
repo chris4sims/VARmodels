@@ -218,12 +218,13 @@ rfmdd <- function(ydata,
         } else {
             uts <- list(NULL)
             ubreaks <- c(0, breaks - lags * 1:nblock)
+            browser()
             for (ib in 1:nblock){
                 tspi <- tsp(ylist[[ib]])
                 frq <- tspi[3]
-                uts[[ib]] <- ts(var$u[(ubreaks[ib] + 1):ubreaks[ib+1], ],
+                uts[[ib]] <- ts(var$u[(ubreaks[ib] + 1):ubreaks[ib+1], ,drop=FALSE],
                                 start=tspi[1] + lags / frq, freq=frq)
-                dimnames(uts[[ib]]) <- list(NULL, dimnames(ylist[[ib]][[2]]))
+                dimnames(uts[[ib]]) <- list(NULL, dimnames(ylist[[ib]])[[2]])
             }
             names(uts) <- names(ylist)
         }
