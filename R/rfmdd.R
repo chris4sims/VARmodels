@@ -16,10 +16,12 @@
 #' For more extensive discussion of the prior parameters see [MNpriorNotes.pdf].
 #'
 #' Implementing a conjugate prior not in the parametric class allowed for in
-#' this function is possible by constructing dummy observations in the format
-#' produced by `varprior()`, possibly combined with some actually produced by
-#' `varprior()`, and invoking `rfvar()` directly or invoking this function with
-#' the custom dummy observations an item in a `ydata` list.
+#' this function is possible by specifying `ydata` as a list and giving one or
+#' more of the elements of the list an attribute named `dummy` and set to TRUE.
+#' The blocks labeled this way are treated as part of the prior.  Changing or
+#' eliminating the `dummy` attribute does not change the posterior distribution,
+#' but it does affect the value of `mdd` and thus Bayes factors for model
+#' comparison.
 #' 
 #' `OwnLagMeans` may be a single numeric value, the prior mean of the
 #' first own lag coefficient in all equations.  If it is a numeric vector of
@@ -38,7 +40,7 @@
 #'              be a list of mts objects that will be stacked up for estimation.
 #' @param lags Number of lags.
 #' @param xdata Exogenous variable data matrix, including initial condition
-#'              dates.
+#'              dates. A list when ydata is a list.
 #' @param const Create constant term (with no need for column of ones in
 #'              \code{xdata})
 #' @param tight Overall tightness of prior.  Larger is tighter. Prior standard
@@ -57,7 +59,6 @@
 #' @param mu Weight on variable-by-variable sum of coeffs dummy observations.
 #'           if negative, does not include x's in the dummy observations
 #' @param OwnLagMeans Prior expectation of own lag coefficients.  See details.
-#' @param train If non-zero, point in the sample where the training sample ends.
 #' @param flat Omit conventional uninformative prior on \code{Sigma}?
 #' @param nonorm Do not normalize posterior to make it a proper prior
 #' @param ic If non-null, do not use initial conditions from \code{ydata} in
@@ -105,6 +106,7 @@ rfmdd <- function(ydata,
             xlist <- xdata
             stopifnot("xdata must also be a list" = is.list(xdata))
         }
+        isdum <- lapply(ylist, function(x) isTRUE(attr(x, "dummy")))
         if (is.null(dim(ylist[[1]]))) {
             lapply(ylist, function(x) matrix(x, ncol=1))
         }
@@ -177,25 +179,32 @@ rfmdd <- function(ydata,
         pint <- matrictint(crossprod(var$u),var$xxi,
                            Tu-flat*(nv+1))-flat*.5*nv*(nv+1)*log(2*pi);
     }
-    if(train != 0) {
-        if(train <= lags) {
-            warning("end of training sample <= # of lags, so training sample not used")       
-        } else {
-            Tp <- train
-            tbreaks <- c(breaks[breaks < train], Tp)
-            ytrain <- ydata[1:Tp,,drop=FALSE] 
-            xtrain <- xdata[1:Tp,,drop=FALSE]
-        }
-    } else {
-        Tp <- 0
-        tbreaks <- NULL
-        ytrain <- NULL
-        xtrain <- NULL
-    }
 
     if (!nonorm) {
-        varp <- rfvar(ydata=rbind(ytrain, vp$ydum), lags=lags, xdata=rbind(xtrain, vp$xdum),
-                      breaks=c(tbreaks, Tp + vp$pbreaks))
+        if (any(isdum)) {
+            yplist <- ylist[isdum]
+            npblock <- length(yplist)
+            ypdata <- matrix(0, 0, nv)
+            if (!is.null(xlist)) {
+                xplist <- xlist[isdum]
+                xpdata <- matrix(0, 0, nx)
+            }
+            for (il in 1:npblock) {
+                ypdata <- rbind(ypdata, yplist[[il]])
+                if (!is.null(xpdata)) {
+                    xpdata <- rbind(xpdata, xplist[[i]])
+                }
+                pbreaks <- cumsum(sapply(yplist, function(x) dim(x)[1]))
+                Tp <- dim(ypdata)[1]
+            }
+        } else {
+            ypdata <- NULL
+            xpdata <- NULL
+            pbreaks <- NULL
+            Tp <- 0
+        }
+        varp <- rfvar(ydata=rbind(ypdata, vp$ydum), lags=lags, xdata=rbind(xpdata, vp$xdum),
+                      breaks=c(pbreaks, Tp + vp$pbreaks))
         if (varp$snglty > 0) {
             warning("Prior improper, short ", varp$snglty, " df.  Results likely nonsense.")
         } else {
