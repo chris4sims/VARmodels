@@ -8,13 +8,16 @@
 #' estimation with an improper prior that uses only some of the Minnesota prior
 #' dummy observations is also possible.  For example `lambda=3`, `mu=1`, `tight=0`,
 #' `w=0`,  (but `sig` non-zero) is a loose improper prior that insulates
-#' against estimates that imply unlikely initial transients.  A pure training
-#' sample prior results if all the prior parameters except `sig` are zero and
-#' `train > lags`.  When the prior is improper, `nonorm=TRUE` avoids some
-#' unnecessary calculations.
+#' against estimates that imply unlikely initial transients.   When the prior is
+#' improper, `nonorm=TRUE` avoids some unnecessary calculations.
 #'
 #' For more extensive discussion of the prior parameters see [MNpriorNotes.pdf].
 #'
+#' Though most commonly `ydata` is just a `mts` object, it can also be a list
+#' of such objects.  The main use of this is to allow use of time series with
+#' missing observations.  It also allows direct entry of dummy observations
+#' to function as part of the prior.
+#' 
 #' Implementing a conjugate prior not in the parametric class allowed for in
 #' `varprior()` is possible by specifying `ydata` as a list and giving one or
 #' more of the elements of the list an attribute named `dummy` and set to TRUE.
@@ -99,7 +102,6 @@ rfmdd <- function(ydata,
                   w=1,
                   xsig=NULL,
                   OwnLagMeans = c(1.25, -.25),
-                  train=0,
                   flat=FALSE,
                   nonorm=FALSE,
                   ic=NULL,
