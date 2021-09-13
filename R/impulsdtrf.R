@@ -8,17 +8,16 @@
 #' \code{smat %*% t(smat) == cov(vout$u)}.  This means that the `smat` from
 #' `postdraw()` has to be transposed.  The routine also works with
 #' singular `smat` or with `smat` column dimension less than its row dimension.
-#' With \code{vout} from \code{rfvarKF}, \code{smat} argument is also required, since
-#' there is no \code{vout$u}.
 #' 
 #' @param vout output from VAR estimatiion
-#' @param  smat  If order and smat are NULL, the impulse responses will be for a cholesky decomp
-#'                with variables ordered as in \code{vout}.  More generally, smat
-#'                can be any set of initial values for the shocks.
+#' @param  smat  If order and smat are NULL, the impulse responses will be for
+#'               a cholesky decomp with variables ordered as in \code{vout}.
+#'               More generally, smat can be any set of initial values for the
+#'               shocks. For an SVAR, 'smat=solve(A0)'.
 #' @param nstep  Number of time steps over which to compute the impulse response.
-#' @param order   To get a cholesky decomp with a different ordering, set order to an integer
-#'                 vector giving the desired ordering.  
-#' @return \item{response}{nvar x nshocks x nstep array of impulse responses.}
+#' @param order  To get a cholesky decomp with a different ordering, set order
+#'               to an integer vector giving the desired ordering.  
+#' @return `nvar` x `nshocks` x `nstep` array of impulse responses.
 #'
 #' @export
 #'
