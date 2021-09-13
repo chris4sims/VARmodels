@@ -10,7 +10,7 @@ schur <- function(A) {
     ## Matrix::Schur would provide a more platform-independent approach.
     ## But to use schdiv(), would need to post-process Schur output to
     ## get full complex, fully triangular, T.
-  if ( !is.loaded("zgees")) dyn.load("/usr/lib/liblapack.so", local=TRUE)
+  if ( !is.loaded("zgees")) dyn.load(La_library, local=TRUE)
   if (is.null(dim(A))) dim(A) <- c(1,1)
   if ( dim(A)[1] ==0) return(list(X=matrix(0,0,0), info=0))
   n <- dim(A)[1]
