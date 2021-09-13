@@ -4,10 +4,10 @@
 #' (mdd)
 #'
 #' The marginal density results are only available if the prior is proper, which
-#' usually requires all or most of the prior parameters are non-zero.  But
+#' usually requires all or most of the prior parameters to be non-zero.  But
 #' estimation with an improper prior that uses only some of the Minnesota prior
 #' dummy observations is also possible.  For example `lambda=3`, `mu=1`, `tight=0`,
-#' `w=0`, `train=0` (but `sig` non-zero) is a loose improper prior that insulates
+#' `w=0`,  (but `sig` non-zero) is a loose improper prior that insulates
 #' against estimates that imply unlikely initial transients.  A pure training
 #' sample prior results if all the prior parameters except `sig` are zero and
 #' `train > lags`.  When the prior is improper, `nonorm=TRUE` avoids some
@@ -16,18 +16,22 @@
 #' For more extensive discussion of the prior parameters see [MNpriorNotes.pdf].
 #'
 #' Implementing a conjugate prior not in the parametric class allowed for in
-#' this function is possible by specifying `ydata` as a list and giving one or
+#' `varprior()` is possible by specifying `ydata` as a list and giving one or
 #' more of the elements of the list an attribute named `dummy` and set to TRUE.
 #' The blocks labeled this way are treated as part of the prior.  Changing or
 #' eliminating the `dummy` attribute does not change the posterior distribution,
 #' but it does affect the value of `mdd` and thus Bayes factors for model
 #' comparison.
+#'
+#' To make the first T0 observations a pure "training sample", make `ydata` a
+#' list with the first component the data from 1 to T0 + lags and the second 
+#' component the data from T0 to the end of the sample. 
 #' 
 #' `OwnLagMeans` may be a single numeric value, the prior mean of the
 #' first own lag coefficient in all equations.  If it is a numeric vector of
 #' length m, the prior mean of the first m lag coefficients in all equations.
 #' If it is a `nv` by `m` matrix, each row is the prior mean of the coefficients
-#' on first `m` lags in one equation.
+#' on the first `m` lags in the corresponding equation.
 #'
 #' The default is close to the optimal second-order univariate AR coefficients
 #' when the variable is a unit-averaged continuous time Wiener process.  This
