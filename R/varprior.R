@@ -106,7 +106,6 @@ varprior <-
             OwnLagMeans <-
                 matrix(c(rep(OwnLagMeans, nv), rep(0, nv * (lags - 1))), nv, lags)
         }
-        ## ydum[1,,1,] <- diag(vprior$sig * nstat, nv, nv) # so own lag has mean zero if nstat FALSE
         for (jv in 1:nv) {
             ydum[1, jv, , jv] <- sig[jv] * OwnLagMeans[jv, ] #
         }
@@ -124,13 +123,20 @@ varprior <-
         ydum <- NULL;
         xdum <- NULL;
     }
-    if (!is.null(lambda) ) {
+    ## Note:  Above we started with newest y's at the top to match ordering
+    ## of lags and keep code interpretable.  But then flipped to put newest
+    ## at bottom as in time series objects.  Since in these "unit root"
+    ## dummy obs's all lags have the same value, no need for the flip here.
+    ## Below, for the w > 0 case, we have to remember to put current at the
+    ## bottom.
+    if (!is.null(lambda) ) {           
         ## lambda obs.  just one
         ydumur <- matrix(ybar, nrow=lags+1, ncol=nv, byrow=TRUE) * abs(lambda)
         ydumur <- array(ydumur, c(dim(ydumur), 1))
         if (nx > 0) {
             if (lambda > 0) {
-                xdumur <- matrix(xbar, lags + 1, nx, byrow=TRUE) * lambda # (all but first row redundant)
+                xdumur <- matrix(xbar, lags + 1, nx, byrow=TRUE) * lambda
+                ## (all but first row redundant)
             } else {
                 xdumur <- matrix(0, lags + 1, nx)
             }
@@ -165,10 +171,10 @@ varprior <-
         } else {
             xdum2 <- NULL
         }
-        ## ydum2[lags+1,,] <- diag(sig,nv,nv) * w
-        ## line above was a bug. w > 0 shrank coefficient on maximal lag.
-        ## fixed 8/22/2021
-        ydum2[1,,] <- diag(sig,nv,nv) * w 
+        ydum2[lags+1,,] <- diag(sig,nv,nv) * w
+        ## Remember that above we have worked with ydum[1,,,] being conetmporary
+        ## but then flipped to make ydum[lags + 1, , ,] contemporary.  Here
+        ## newest is at the bottom.
     } else {
         ydum2 <- NULL
         xdum2 <- NULL
