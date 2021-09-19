@@ -33,11 +33,53 @@ DONE
 
 svar takes A0 and lmd as given, uses equation-by-equation fit, allows weighted 
 observations.  (via lmd.  Separately as t-errors, or just dim(lmd)[2]==T?
+This new svar is just the svar case of rfvar3, which has been deleted from
+rfvar.
 
 rfvar uses svd, so can handle singular rhs matrix, uses default prior with mu 
 and lambda only.
 
 Above can all be done on one git branch.
+----------------------------------------------
+9/13/21:  SVARhtskdmdd should be renamed something like svar().  It should, 
+like rfvar, not use dates or take list-form data.  When bvarwrap is called 
+repeatedly in optimization or MCMC, the prior doesn't change and the stacked-up
+data including the dummy observations remains constant.  So there should be
+a version of bvarwrap and svar that does not need to call varprior or to do
+the stacking of ylist.
+
+So:  svarinit() should create stacked ydata, Tsigbrk, and an svar function.
+The latter then has access to the stacked ydata and Tsigbrk that remain 
+constant across repeated calls to svar.  This is a lot of work.  Does it save
+enough computation time to be worth it?
+-------------------------------------------------
+Even if Tsigbrk varies, breaks is stable.  But Hidden Markov chain doesn't work
+nicely if there are data breaks.  It has to know how big the breaks are to know
+what power of the P matrix to apply at the break.  But the ylist, with its date
+attributes, has this info, so HMC software can just be an outer loop.  
+breaks != NULL just prevents a Gibbs draw from a Dirichlet for the transition
+matrix elements.
+-------------------------------------------------
+9/17/21:  svar and rfvar now take y as a "time series with breaks", T x nvar
+matrix, and populate a big X matrix with lagged values of y, also xdata.
+for rfvar this makes sense, since rfvar is likely to be called iteratively
+only if prior parameters are varied, and these require changing the dummy variable
+part of X.  But svar will be called iteratively with only A0 and lmd changing.
+So for svar, it would speed things up to set up X outside of svar.
+
+Why create "time series with breaks" form at all?  varprior() can easily return
+a list, and then can populate Y,X from the real and dummy list elements directly.
+The Y,X pair are used directly in rfvar, only after transformation by svar.
+
+In iteration over (A0, lmd), it would save some time to not run list -> Y,X on each
+call, but in iteration over prior parameters have to run it each time anyway.
+
+An "svarInit()" function that created Y,X and returned an svar function with Y,X in 
+its environment could create space issues for naive users, since every time prior
+parameters are altered a new svar function with its Y,X is created, unless the returned
+svar() function overwrites any previous one or the previous one is rm'd.
+
+Need to time list -> Y,X on realistic data/model.
 -------------------------------------------------
 varprior: Besides implementing the MN prior (as now) it should also facilitate 
 entering arbitrary prior dummy obs's as (nlags+1) x nvar matrix
