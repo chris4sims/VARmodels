@@ -233,7 +233,6 @@ rfmdd <- function(ydata,
         } else {
             uts <- list(NULL)
             ubreaks <- c(0, breaks - lags * 1:nblock)
-            browser()
             for (ib in 1:nblock){
                 tspi <- tsp(ylist[[ib]])
                 frq <- tspi[3]
