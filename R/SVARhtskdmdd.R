@@ -19,7 +19,7 @@
 #'
 #' Note that to enter a prior directly as dummy observations, one can treat the
 #' Dummy observations as a training sample.
-
+#'
 #' @param ydata  endogenous variable data matrix, including initial condition dates.
 #' @param lags   number of lags in the model.
 #' @param xdata  exogenous variable data matrix, including initial condition dates.  
@@ -109,8 +109,9 @@ SVARhtskdmdd <- function(ydata,lags,xdata=NULL, const=TRUE, A0, lmd, Tsigbrk, br
     ## const=FALSE, lambda=lambda, mu=mu, ic=ic) # const is FALSE in this call because
     ## ones alread put into xdata
     var = rfvar3(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum),
-                 breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1), const=FALSE, lambda=NULL,
-                 mu=NULL, ic=ic, sigpar=list(A0=A0,lmd=lmd,Tsigbrk=c(Tsigbrk,T)))
+                 breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1), const=FALSE,
+                 lambda=NULL, mu=NULL, ic=ic,
+                 sigpar=list(A0=A0,lmd=lmd, Tsigbrk=c(Tsigbrk,T)))
     ##  const is FALSE in this call because ones alread put into xdata
     if (is.null(var)) {
         return(list(w = -Inf))
