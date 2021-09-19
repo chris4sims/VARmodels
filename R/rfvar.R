@@ -11,10 +11,10 @@
 #' are included, after the "real" data, at the end of `ydata`.  The `breaks`
 #' vector specifies rows of `ydata` after which there are lags rows that are
 #' used as initial conditions for the next span of data.  Dummy observations
-#' for a prior are usualy single blocks of lags+1 rows.  But `breaks` can also
+#' for a prior are usually single blocks of lags+1 rows.  But `breaks` can also
 #' be used to omit blocks of rows of `ydata`, or to specify where data for
 #' a specific country ends if a single VAR is being fit to data for several
-#' countries.
+#' countries.  
 #'
 #' @param ydata `T x nvar` dependent variable data matrix.
 #' @param lags number of lags in the VAR
@@ -76,14 +76,11 @@ rfvar <- function(ydata=NULL,
         stop("list of breaks must be in increasing order\n")
     smpl <- NULL
     for (nb in 2:(nbreaks + 2)) {
-        if ( breaks[nb] > breaks[nb-1] + lags ){
-            smpl <- c(smpl, (breaks[nb-1] + lags + 1):breaks[nb])
-        }
+        ## if ( breaks[nb] > breaks[nb-1] + lags )
+        ## Because data is already stacked up, every batch of data after
+        ## a break has at least lags +1 rows.
+        smpl <- c(smpl, (breaks[nb-1] + lags + 1):breaks[nb])
     }
-    ## One can omit blocks of more than lags rows of ydata from the fit by
-    ## specifying sequences of breaks separated by less than lags + 1.  To omit
-    ## blocks smaller than lags, though, requires repeating some rows in ydata
-    ## itself, since the first lags rows after a break are always dropped.
     Tsmpl <- length(smpl)
     X <- array(0,dim=c(Tsmpl,nvar,lags))
     for(ix in seq(along=smpl))
