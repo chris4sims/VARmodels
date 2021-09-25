@@ -8,7 +8,8 @@
 #' @details `tsdate` can either be a vector of real numbers, e.g. 1973.25
 #'           or `c(1973.25, 1990+2/3)`, or a matrix with 2 columns containing
 #'           dates in year-month pairs `c(1973,2), c(1990,9)` (for monthly data, e.g.).
-#'           
+#'           If the date is outside the start, end range, the returned observation
+#'           number will be zero or N+1 where N is the number of rows in tsobj.
 #' @export
 #' @md
 #' 
@@ -16,7 +17,8 @@ invTime <- function(tsdate, tsobj) {
   start <- tsp(tsobj)[1]
   end <- tsp(tsobj)[2]
   freq <- tsp(tsobj)[3]
-  tsobjInt <- c(0, time(tsobj) + .5 / freq)        # assumes no negative years
+  tsobjInt <- time(tsobj)        
+  tsobjInt <- c(tsobjInt[1] - .5/freq, tsobjInt + .5 / freq)
   if (is.null(dim(tsdate)) && length(tsdate)==2) { # ambiguity
                                         # c(1900. 1900.25)
                                         # or c(1900,1) ?
