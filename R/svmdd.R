@@ -288,7 +288,7 @@ function(ydata,
                 varp=varp,
                 uts <- uts,
                 A0=A0,
-                Tsigbrk=Tsigbrk,
+                Tsigbrk=Tsigbrk0,
                 lmd=lmd,
                 prior=list(
                     tight=tight,
