@@ -135,7 +135,7 @@ rfmdd <- function(ydata,
             }
         }
         breaks <- cumsum(sapply(ylist, function(x) dim(x)[1]))
-        ## Here breaks includes end, unlike in calls to rfvar()  
+        ## Here breaks includes end  
     } else {
         if (is.null(dim(ydata))) {
             dim(ydata) <- c(length(ydata), 1)
@@ -143,8 +143,7 @@ rfmdd <- function(ydata,
         ylist <- list(ydata)
         xlist <- list(xdata)
         nblock <- 1
-        nv <- ncol(ydata)
-        
+        nv <- ncol(ydata)        
         breaks <- nrow(ydata)
     }
     T <- dim(ydata)[1]
