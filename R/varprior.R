@@ -68,13 +68,25 @@ varprior <-
         ## y's  and current x's. we separate the y's and the x's into two arrays.  The last two indexes, lag
         ## and rhsy, index the dummy observations.  
         xdum <- if(nx > 0) {
-                    array(0, dim=c(lags + 1, nx, lags, nv), dimnames=list(obsno=1:(lags + 1), xvbl=1:nx, lag=1:lags, rhsy=1:nv))
+                    array(0, dim=c(lags + 1, nx, lags, nv),
+                          dimnames=list(obsno=1:(lags + 1),
+                                        xvbl=1:nx,
+                                        lag=1:lags,
+                                        rhsy=1:nv))
                 } else {
                     NULL
                 }
-        ydum <- array(0,dim=c(lags+1,nv,lags,nv),dimnames=list(obsno=1:(lags+1), lhsy=1:nv, lag=1:lags, rhsy=1:nv))
+        ydum <- array(0,dim=c(lags+1,nv,lags,nv),
+                      dimnames=list(obsno=1:(lags+1),
+                                    lhsy=1:nv,
+                                    lag=1:lags,
+                                    rhsy=1:nv))
         if (nx > 0) {
-            xdum <- array(0, dim=c(lags+1, nx, lags, nv), dimnames=list(obsno=1:(lags+1), rhsx=1:nx, lag=1:lags, rhsy=1:nv))
+            xdum <- array(0, dim=c(lags+1, nx, lags, nv),
+                          dimnames=list(obsno=1:(lags+1),
+                                        rhsx=1:nx,
+                                        lag=1:lags,
+                                        rhsy=1:nv))
         } else {
             NULL
         }
@@ -182,22 +194,24 @@ varprior <-
     ## stack everything up.
     if (!is.null(ydum)) {
         dim(ydum) <- c(lags + 1, nv, lags * nv) # merge all the individual mn dobs
-        ydum <- abind(ydum, ydumur, ydum2, along=3)
-        breaks <- (lags+1) * (1:(dim(ydum)[3] -1)) # end of sample is not a "break".
-        ydum <- aperm(ydum, c(1, 3, 2))
-        ydum <- matrix(ydum, ncol=dim(ydum)[3])
-        dimnames(ydum) <- list(NULL, names(sig))
-    } else {
+    }
+    ydum <- abind(ydum, ydumur, ydum2, along=3) #some of the ydum's could be NULL
+    breaks <- (lags+1) * (1:(dim(ydum)[3] -1)) # end of sample is not a "break".
+    ydum <- aperm(ydum, c(1, 3, 2))
+    ydum <- matrix(ydum, ncol=dim(ydum)[3])
+    dimnames(ydum) <- list(NULL, names(sig))
+    if ( is.null(ydum)) {               #no prior dummies at all
         breaks <- NULL
     }
     if (! is.null(xdum)) {
         dim(xdum) <- c(lags + 1, nx, lags * nv)
-        xdum <- abind(xdum, xdumur, xdum2, along=3)
-        xdum <- aperm(xdum, c(1,3,2))
-        xdum <- matrix(xdum, ncol=dim(xdum)[3])
-        if (!is.null(xsig)) {
-            dimnames(xdum) <- list(NULL, names(xsig))
-        }
+    }
+    
+    xdum <- abind(xdum, xdumur, xdum2, along=3)
+    xdum <- aperm(xdum, c(1,3,2))
+    xdum <- matrix(xdum, ncol=dim(xdum)[3])
+    if (!is.null(xsig)) {
+        dimnames(xdum) <- list(NULL, names(xsig))
     }
     return(list(ydum=ydum,xdum=xdum,pbreaks=breaks))
 }
