@@ -92,9 +92,6 @@ varprior <-
         }
         for (il in 1:lags)
         {
-            ##-----debug---------
-            ## browser()
-            ##------------------
             ydum[il+1,,il,] <- il^decay*diag(sig,nv,nv)
         }
         ## If we have non-trivial x's, need dobs's for them, also.
@@ -118,8 +115,9 @@ varprior <-
             OwnLagMeans <-
                 matrix(c(rep(OwnLagMeans, nv), rep(0, nv * (lags - 1))), nv, lags)
         }
-        for (jv in 1:nv) {
-            ydum[1, jv, , jv] <- sig[jv] * OwnLagMeans[jv, ] #
+        for (il in 1:lags) {
+                ydum[1, , il, ] <- diag(sig * OwnLagMeans[ , il], nv, nv) * il^decay 
+            ## ydum[1, jv, il, jv] <- sig[jv] * OwnLagMeans[jv, il] * il^decay 
         }
         ydum <- tight * ydum
         dim(ydum) <- c(lags+1,nv,lags*nv)
