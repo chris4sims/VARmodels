@@ -81,12 +81,13 @@
 #' * `w`: Marginal posterior density for `A0`, `lmd`, with `A+` integrated out.
 #' * `var`: Output of `svar()` for full sample, including dummy observations.
 #' * `varp`: output of `svar()` on prior dummy observations only.
-#' + `uts`: residuals for real data, as time series with dates.  
+#' + `uts`: residuals for real data, as time series with dates if there are no
+#'          breaks, as a list of time series if there are breaks.
 #' * also: the input arguments
 #' 
 #' @md
 #' @export
-function(ydata,
+svmdd <- function(ydata,
          lags,
          xdata=NULL,
          const=TRUE,
@@ -97,7 +98,7 @@ function(ydata,
          mu=1,
          tight=3,
          decay=.5,
-         sig=rep(.01, NCOL(ydata)[2]),
+         sig=rep(.01, NCOL(ydata)),
          w=1,
          xsig=NULL,
          OwnLagMeans = c(1.25, -.25),
@@ -142,6 +143,8 @@ function(ydata,
         breaks <- cumsum(sapply(ylist, function(x) dim(x)[1]))
         ## Here breaks includes end  
     } else {
+        nblockReal <- 1
+        isdum <- FALSE                  #No "manual" dummy blocks
         if (is.null(dim(ydata))) {
            dim(ydata) <- c(length(ydata), 1)
         }
@@ -150,7 +153,9 @@ function(ydata,
         nblock <- 1
         nv <- ncol(ydata)        
         breaks <- nrow(ydata)
+        Treal <- breaks
     }
+    vnames <- dimnames(ylist[[1]])[2]
     ## Tsigbrk as dates to Tsigbrk as index into ydata
     blocktsp <- lapply(ylist, tsp)
     frq <- tsp(ylist[[1]])[3]
@@ -159,19 +164,22 @@ function(ydata,
     }
     Tsigbrk0 <- Tsigbrk                 #save original dates
     librk <- function(ylistitem) {
-        if (!attr(ylisitem, "dummy")) {
-            len <- dim(ylistitem)[1]
-            tsb <- invTime(Tsigbrk, ylistitem)
+        if (!isTRUE(attr(ylistitem, "dummy"))) {
+            yli <- unlist(ylistitem)
+            len <- dim(yli)[1]
+            tsb <- invTime(Tsigbrk, yli)
             tsb <- tsb[tsb > 0 & tsb <= len]
         } else {
             numeric(0)
         }
     }
     relTsb <- lapply(ylist, librk)
-    for ( ib in 2:nblock) {
-        relTsb[[ib]] <- relTsb[[ib]] + breaks[ib - 1]
-        ## numeric(0) (0-length vectors) are unchanged when we add a
-        ## number to them
+    if (nblock > 1) {
+        for ( ib in 2:nblock) {
+            relTsb[[ib]] <- relTsb[[ib]] + breaks[ib - 1]
+            ## numeric(0) (0-length vectors) are unchanged when we add a
+            ## number to them
+        }
     }
     Tsigbrk <- unlist(relTsb)           #Tsigbrk is now indexes into ydata
     T <- dim(ydata)[1]
@@ -197,14 +205,21 @@ function(ydata,
             xbar <- ic[nv + 1:nx]
         } else {
             xbar  <-  NULL}
-    }    
+    }
+    ## What about no-prior, or training sample only, cases?
+    ## Should then skip vp call, not add column to lmd, not add a "dummy regime"
+    ## in Tsigbrk.
     vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, xsig=xsig,
                    w=w, lambda=lambda, mu=mu, ybar=ybar,
                    xbar=xbar, OwnLagMeans=OwnLagMeans)
-    lmd <- cbind(lmd, rep(1, nv))       #sets lmd weight on dummies to one.
+    if (T > max(breaks)) breaks <- c(breaks, T)
+    if (isTRUE(vp$breaks > 0)) breaks <- c(breaks, vp$breaks)
+    ## varprior returns NULL ydum and xdum if there are no prior dummies at all.
+    ## lmd does *not* include the column of ones at the end to weight the dummies
+    ## this is added in svar() whenever max(Tsigbrk) < nrow(svar ydata arg)
     var = svar(ydata=rbind(ydata, vp$ydum), lags=lags, xdata=rbind(xdata,vp$xdum),
-               breaks=matrix(c(breaks, T, T + vp$pbreaks), ncol=1), const=FALSE,
-               ic=ic, A0=A0,lmd=lmd, Tsigbrk=c(Tsigbrk, Treal))
+               breaks=matrix(breaks, ncol=1), const=FALSE,
+               A0=A0,lmd=lmd, Tsigbrk=c(Tsigbrk, Treal))
     ##  const is FALSE in this call because ones alread put into xdata
         if (is.null(var)) {
             print("Call to svar() failed")
@@ -225,6 +240,7 @@ function(ydata,
             Ttrain <- dim(ytrain)[1]
             tbreaks <- breaks[breaks < Ttrain]
         } else {
+            Ttrain <- 0
             ytrain <- matrix(0, 0, nv)
             xtrain <- matrix(0, 0, nx)
             tbreaks <- integer(0)
@@ -245,7 +261,6 @@ function(ydata,
                      xdata=xpriorstack,
                      breaks=c(tbreaks, mpbreaks, Ttrain + T - Treal + vp$pbreaks), 
                      const=FALSE,
-                     ic=ic,
                      A0=A0,
                      lmd=matrix(1, nv, 1),
                      Tsigbrk=dim(ypriorstack)[1]
@@ -269,43 +284,53 @@ function(ydata,
         varp <- NULL
     }
     if (verbose) {
-        uts <- list(NULL)
-        blockend <- 0
-        for (ils in 1:nblockReal) {
-            blockstart <- blockend + lags + 1
-            blockend <- dim(ylist[[ils]])[1] + blockend
-            blocktsp <- tsp(ylist[[ils]])
-            uts[ils] <- ts(var$uraw[(blockend + 1 + lags):blockend, ],
-                           start=blocktsp[1],
-                           end=blocktsp[2],
-                           freq=blocktsp[3]
-                           )
-        }
-        return(
-            list(
-                mdd=mdd,
-                var=var,
-                varp=varp,
-                uts <- uts,
-                A0=A0,
-                Tsigbrk=Tsigbrk0,
-                lmd=lmd,
-                prior=list(
-                    tight=tight,
-                    decay=decay,
-                    sig=sig,
-                    w=w,
-                    lambda=lambda,
-                    mu=mu,
-                    OwnLagMeans=OwnLagMeans,
+        if (nblock == 1) {
+            frq <- frequency(ydata)
+            uts <- ts(var$uraw[1:(Treal-lags), ],
+                      start=tsp(ydata)[1] + lags / frq,
+                      end=tsp(ydata)[2],
+                      freq=freq)
+            dimnames(uts) <- dimnames(ydata)[2]
+        } else {        
+            uts <- list(NULL)
+            blockend <- 0
+            for (ils in 1:nblockReal) {
+                blockstart <- blockend + 1
+                blockend <- dim(ylist[[ils]])[1] + blockend - lags
+                blocktsp <- tsp(ylist[[ils]])
+                blocktsp[1] <- blocktsp[1] + lags / blocktsp[3]
+                browser()
+                uts[[ils]] <- ts(var$uraw[blockstart:blockend, ],
+                                 start=blocktsp[1],
+                                 end=blocktsp[2],
+                                 freq=blocktsp[3]
+                                 )
+                dimnames(uts[[ils]])[[2]] <- vnames
+            }
+            return(
+                list(
+                    mdd=mdd,
+                    var=var,
+                    varp=varp,
+                    uts=uts,
+                    A0=A0,
+                    Tsigbrk=Tsigbrk0,
+                    lmd=lmd,
+                    prior=list(
+                        tight=tight,
+                        decay=decay,
+                        sig=sig,
+                        w=w,
+                        lambda=lambda,
+                        mu=mu,
+                        OwnLagMeans=OwnLagMeans),
                     flat=flat,
                     ic=ic,
                     call=match.call()
                 )
             )
-        )
-    } else {
-        return(mdd)
+        } else {
+            return(mdd)
+        }
     }
-}
 
