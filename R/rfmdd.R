@@ -112,7 +112,7 @@ rfmdd <- function(ydata,
             xlist <- xdata
             stopifnot("xdata must also be a list" = is.list(xdata))
         }
-        isdum <- lapply(ylist, function(x) isTRUE(attr(x, "dummy")))
+        isdum <- sapply(ylist, function(x) isTRUE(attr(x, "dummy")))
         if (is.null(dim(ylist[[1]]))) {
             lapply(ylist, function(x) matrix(x, ncol=1))
         }
@@ -145,6 +145,7 @@ rfmdd <- function(ydata,
         nblock <- 1
         nv <- ncol(ydata)        
         breaks <- nrow(ydata)
+        isdum <- FALSE
     }
     T <- dim(ydata)[1]
     nv <- dim(ydata)[2]
@@ -227,12 +228,14 @@ rfmdd <- function(ydata,
          if (nblock == 1) {
          frq <- frequency(ydata)
          uts <- ts(var$u[1:(T-lags), ],
-                      start=tsp(ydata)[1] + (lags - 1) / frq,
-                      end=tsp(ydata)[2], freq=frq)
+                   start=tsp(ydata)[1] + lags / frq,
+                   end=tsp(ydata)[2],
+                   freq=freq)
+         dimnames(uts) <- dimnames(ydata)[2]
         } else {
             uts <- list(NULL)
             ubreaks <- c(0, breaks - lags * 1:nblock)
-            for (ib in 1:nblock){
+            for (ib in 1:nblock) {
                 tspi <- tsp(ylist[[ib]])
                 frq <- tspi[3]
                 uts[[ib]] <- ts(var$u[(ubreaks[ib] + 1):ubreaks[ib+1], ,drop=FALSE],
