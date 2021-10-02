@@ -46,15 +46,30 @@
 #' @md
 #' 
 checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
-    ny <- dim(vout$var$By)[1]
-    lags <- dim(vout$var$By)[3]
-    A <- sysmat(vout$var$By)
+    if (!is.null(vout$A0)){        #svmdd output, not rfmdd
+        A0i <- solve(vout$A0)
+        By <- tensor(A0i, vout$var$By, 2, 1)
+        Bx <- A0i %*% vout$var$Bx
+    } else {
+        By <- vout$var$By
+        Bx <- vout$var$Bx
+    }
+    ny <- dim(By)[1]
+    lags <- dim(By)[3]
+    uts <- vout$uts
+    utsmat <- matrix(0, 0, ny)
+    if (!is.null(uts)) {
+        for (ils in 1:length(uts)) {
+            utsmat <- rbind(utsmat, uts[[ils]])
+        }
+    }
+    A <- sysmat(By)
     if (is.null(T) && is.null(divider)) {
-        if (is.null(vout$uts)) {
+        if (is.null(uts)) {
             print(noquote("T must be supplied if uts not available"))
             return()
         }
-        T <- dim(vout$uts)[1]
+        T <- dim(utsmat)[1]
     }
     nA <- dim(A)[1]
     schout <- Matrix::Schur(A)
@@ -68,21 +83,22 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
     roots <- diag(sschout$T)
     luout <- lu(sschout$Q)
     cointmat <- solve(luout$L[1:ny,1:ny])
-    dimnames(cointmat) <- list(root=as.character(roots[1:ny]),
-                               vbl=dimnames(vout$var$By)[[2]][luout$rowperm[1:ny]])
+    dimnames(cointmat) <- list(NULL,
+                               vbl=dimnames(vout$uts[[1]])[[2]][luout$rowperm[1:ny]])
     Q <- sschout$Q
     TT <- sschout$T
-    if (! is.null(ic) && !is.null(vout$uts)
+    browser()
+    if (!is.null(ic) && !is.null(vout$uts)
         && (!is.null(T) || (is.null(T) && divider < 1))) {
         Ve <- matrix(0, ny * lags, ny * lags)
-        Ve[1:ny, 1:ny] <- cov(vout$uts)
+        Ve[1:ny, 1:ny] <- cov(utsmat)
         Ve <- t(Conj(Q)) %*% Ve %*% Q
         nbig <- sum(compf(diag(TT)))
         ndxstat <- (nbig + 1):(ny * lags)
         nsmall <- length(ndxstat)
         TTsmall <- TT[ndxstat,ndxstat]
         Vz <- doubling(TTsmall, Ve[ndxstat, ndxstat])
-        muz <- t(Conj(Q))[ndxstat, ] %*% c(vout$var$Bx %*% icx, rep(0, ny * (lags - 1)))
+        muz <- t(Conj(Q))[ndxstat, ] %*% c(Bx %*% icx, rep(0, ny * (lags - 1)))
         muz <- solve(diag(nsmall) - TTsmall, muz)
         z0 <- t(Conj(Q))[ndxstat, ] %*% c(t(ic[lags:1, ]))
         z0tstat <- (z0 - muz) / sqrt(diag(Vz))
@@ -94,8 +110,7 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
         if (nbig < ny){
             cointvecs <- cointmat[-(1:nbig), ]
             if(all(abs(Im(cointvecs)) < 1e4 * .Machine$double.eps))
-                cointvecs <- Re(cointvecs)  #I think it's always real,
-                                        # but don't have a proof.
+                cointvecs <- Re(cointvecs)  
         } else {
             cointvecs <- NULL
         }
