@@ -88,24 +88,24 @@
 #' @md
 #' @export
 svmdd <- function(ydata,
-         lags,
-         xdata=NULL,
-         const=TRUE,
-         A0,
-         Tsigbrk,
-         lmd,         
-         lambda=5,
-         mu=1,
-         tight=3,
-         decay=.5,
-         sig=rep(.01, NCOL(ydata)),
-         w=1,
-         xsig=NULL,
-         OwnLagMeans = c(1.25, -.25),
-         flat=FALSE,
-         nonorm=FALSE,
-         ic=NULL,
-         verbose=TRUE) {
+                  lags,
+                  xdata=NULL,
+                  const=TRUE,
+                  A0,
+                  Tsigbrk,
+                  lmd,         
+                  lambda=5,
+                  mu=1,
+                  tight=3,
+                  decay=.5,
+                  sig=rep(.01, NCOL(ydata)),
+                  w=1,
+                  xsig=NULL,
+                  OwnLagMeans = c(1.25, -.25),
+                  flat=FALSE,
+                  nonorm=FALSE,
+                  ic=NULL,
+                  verbose=TRUE) {
     if (is.list(ydata)) {
         ylist <- ydata
         nblock <- length(ylist)        
@@ -118,7 +118,7 @@ svmdd <- function(ydata,
         }
         isdum <- sapply(ylist, function(x) isTRUE(attr(x, "dummy")))
         if (any(isdum)) {
-             nblockReal <- match(TRUE, isdum) - 1
+            nblockReal <- match(TRUE, isdum) - 1
         } else {
             nblockReal <- nblock
         }
@@ -146,7 +146,7 @@ svmdd <- function(ydata,
         nblockReal <- 1
         isdum <- FALSE                  #No "manual" dummy blocks
         if (is.null(dim(ydata))) {
-           dim(ydata) <- c(length(ydata), 1)
+            dim(ydata) <- c(length(ydata), 1)
         }
         ylist <- list(ydata)
         xlist <- list(xdata)
@@ -212,8 +212,9 @@ svmdd <- function(ydata,
     vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, xsig=xsig,
                    w=w, lambda=lambda, mu=mu, ybar=ybar,
                    xbar=xbar, OwnLagMeans=OwnLagMeans)
+    browser()
     if (T > max(breaks)) breaks <- c(breaks, T)
-    if (isTRUE(vp$breaks > 0)) breaks <- c(breaks, vp$breaks)
+    if (isTRUE(length(vp$pbreaks) > 0)) breaks <- c(breaks, max(breaks) + vp$pbreaks)
     ## varprior returns NULL ydum and xdum if there are no prior dummies at all.
     ## lmd does *not* include the column of ones at the end to weight the dummies
     ## this is added in svar() whenever max(Tsigbrk) < nrow(svar ydata arg)
@@ -221,10 +222,10 @@ svmdd <- function(ydata,
                breaks=matrix(breaks, ncol=1), const=FALSE,
                A0=A0,lmd=lmd, Tsigbrk=c(Tsigbrk, Treal))
     ##  const is FALSE in this call because ones alread put into xdata
-        if (is.null(var)) {
-            print("Call to svar() failed")
-            return(list(w = -Inf))
-        }    
+    if (is.null(var)) {
+        print("Call to svar() failed")
+        return(list(w = -Inf))
+    }    
     Tu <- dim(var$u)[1]
     if ( any(var$snglty > 0) ) error( var$snglty, " redundant columns in rhs matrix")
     lmdllh <- -.5 * sum(log(var$lmdseries))
@@ -289,8 +290,8 @@ svmdd <- function(ydata,
             uts <- ts(var$uraw[1:(Treal-lags), ],
                       start=tsp(ydata)[1] + lags / frq,
                       end=tsp(ydata)[2],
-                      freq=freq)
-            dimnames(uts) <- dimnames(ydata)[2]
+                      freq=frq)
+            dimnames(uts)[2] <- dimnames(ydata)[2]
         } else {        
             uts <- list(NULL)
             blockend <- 0
@@ -307,30 +308,30 @@ svmdd <- function(ydata,
                                  )
                 dimnames(uts[[ils]])[[2]] <- vnames
             }
-            return(
-                list(
-                    mdd=mdd,
-                    var=var,
-                    varp=varp,
-                    uts=uts,
-                    A0=A0,
-                    Tsigbrk=Tsigbrk0,
-                    lmd=lmd,
-                    prior=list(
-                        tight=tight,
-                        decay=decay,
-                        sig=sig,
-                        w=w,
-                        lambda=lambda,
-                        mu=mu,
-                        OwnLagMeans=OwnLagMeans),
-                    flat=flat,
-                    ic=ic,
-                    call=match.call()
-                )
-            )
-        } else {
-            return(mdd)
         }
+        return(
+            list(
+                mdd=mdd,
+                var=var,
+                varp=varp,
+                uts=uts,
+                A0=A0,
+                Tsigbrk=Tsigbrk0,
+                lmd=lmd,
+                prior=list(
+                    tight=tight,
+                    decay=decay,
+                    sig=sig,
+                    w=w,
+                    lambda=lambda,
+                    mu=mu,
+                    OwnLagMeans=OwnLagMeans),
+                flat=flat,
+                ic=ic,
+                call=match.call()
+            )
+        )
+    } else {
+        return(mdd)
     }
-
+}

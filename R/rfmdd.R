@@ -230,8 +230,8 @@ rfmdd <- function(ydata,
          uts <- ts(var$u[1:(T-lags), ],
                    start=tsp(ydata)[1] + lags / frq,
                    end=tsp(ydata)[2],
-                   freq=freq)
-         dimnames(uts) <- dimnames(ydata)[2]
+                   freq=frq)
+         dimnames(uts)[[2]] <- dimnames(ydata)[[2]]
         } else {
             uts <- list(NULL)
             ubreaks <- c(0, breaks - lags * 1:nblock)
