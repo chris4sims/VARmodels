@@ -14,9 +14,9 @@
 #' \subsection{`A0`}{constant matrix such that \code{A0 \% * \% u},
 #'     where \code{u} is the reduced form VAR residual, has a diagonal covariance
 #'     matrix.}
-#' \subsection{Varying variances`}{ The rows of `lmd` are constrained to average
-#'     to 1, and rows after the last element of `Tsigbrk` all are given a vector
-#'     of ones as `lmd` entries.}
+#' \subsection{Varying variances}{ The rows of `lmd` are constrained to average
+#'     to 1, and rows in ydata after the last element of `Tsigbrk`, which should
+#'     all be prior dummy observations, are given a vector of ones as `lmd` entries.}
 #'
 #'@param ydata Endogenous variable data matrix, including initial condition
 #'              dates.  Usually just an mts object.  More generally, it may
