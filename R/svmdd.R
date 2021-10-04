@@ -7,13 +7,26 @@
 #' having a diagonal covariance matrix that varies over time.  The variances change
 #' at the dates in  `Tsigbreak', and their relative sizes are in the `lmd' matrix.
 #' 
-#'#' The marginal density results are only available if the prior is proper, which
+#' @details The marginal density results are only available if the prior is proper, which
 #' usually requires all or most of the prior parameters to be non-zero.  But
 #' estimation with an improper prior that uses only some of the Minnesota prior
 #' dummy observations is also possible.  For example `lambda=3`, `mu=1`, `tight=0`,
 #' `w=0`,  (but `sig` non-zero) is a loose improper prior that insulates
 #' against estimates that imply unlikely initial transients.   When the prior is
 #' improper, `nonorm=TRUE` avoids some unnecessary calculations.
+#'
+#' @details `OwnLagMeans` may be a single numeric value, the prior mean of the
+#' first own lag coefficient in all equations.  If it is a numeric vector of
+#' length m, it is the prior mean of the first m lag coefficients in all equations.
+#' If it is a `nv` by `m` matrix, each row is the prior mean of the coefficients
+#' on the first `m` lags in the corresponding equation.
+#'
+#' The default `OwnLagMeans=c(1.25, -1.25)` is close to the optimal second-order
+#' univariate AR coefficients when the variable is a unit-averaged continuous time
+#' Wiener process.  This works well for variables like GDP or investment, which
+#' cumulate through time.  For data that are sampled rather than averaged, like
+#' some financial or price data, `OwnLagMeans=1` is better. For near-i.i.d. series
+#' like asset yields, `OwnLagMeans=0' might be better.
 #'
 #' For more extensive discussion of the prior parameters see [MNpriorNotes.pdf].
 #'
@@ -28,7 +41,7 @@
 #' `dummy`, set to `TRUE`. In this case ususally you will want `const=FALSE`.
 #' 
 #' A "training sample" prior can be implemented with a list element with attribute
-#' `train` set to TRUE.  This is real data, with meaningful time series prperties,
+#' `train` set to TRUE.  This is real data, with meaningful time series properties,
 #' and must be the first part of the data set.  No shock variance breaks
 #' (dates in `Tsigbrk`) can be in the training sample.
 #'
@@ -37,17 +50,6 @@
 #' but it does affect the value of `mdd` and thus Bayes factors for model
 #' comparison.
 #'
-#' `OwnLagMeans` may be a single numeric value, the prior mean of the
-#' first own lag coefficient in all equations.  If it is a numeric vector of
-#' length m, it is the prior mean of the first m lag coefficients in all equations.
-#' If it is a `nv` by `m` matrix, each row is the prior mean of the coefficients
-#' on the first `m` lags in the corresponding equation.
-#'
-#' The default is close to the optimal second-order univariate AR coefficients
-#' when the variable is a unit-averaged continuous time Wiener process.  This
-#' works well for variables like GDP or investment, which cumulate through time.
-#' For data that are sampled rather than averaged, like some financial or price
-#' data, `OwnLagMeans=1` is better.  
 #'
 #' @param ydata  Endogenous variable data matrix, including initial condition
 #'              dates.  Usually just an mts object.  More generally, it may
@@ -212,7 +214,6 @@ svmdd <- function(ydata,
     vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, xsig=xsig,
                    w=w, lambda=lambda, mu=mu, ybar=ybar,
                    xbar=xbar, OwnLagMeans=OwnLagMeans)
-    browser()
     if (T > max(breaks)) breaks <- c(breaks, T)
     if (isTRUE(length(vp$pbreaks) > 0)) breaks <- c(breaks, max(breaks) + vp$pbreaks)
     ## varprior returns NULL ydum and xdum if there are no prior dummies at all.
