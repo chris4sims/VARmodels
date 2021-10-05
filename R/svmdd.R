@@ -80,7 +80,7 @@
 #' @param verbose If FALSE, return only the log marginal posterior density for `A0,lmd'.
 
 #' @return
-#' * `w`: Marginal posterior density for `A0`, `lmd`, with `A+` integrated out.
+#' * `w`: log Marginal posterior density for `A0`, `lmd`, with `A+` integrated out.
 #' * `var`: Output of `svar()` for full sample, including dummy observations.
 #' * `varp`: output of `svar()` on prior dummy observations only.
 #' + `uts`: residuals for real data, as time series with dates if there are no
@@ -99,7 +99,7 @@ svmdd <- function(ydata,
                   lambda=5,
                   mu=1,
                   tight=3,
-                  decay=.5,
+                  decay=.3,
                   sig=rep(.01, NCOL(ydata)),
                   w=1,
                   xsig=NULL,
