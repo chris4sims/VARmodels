@@ -59,15 +59,18 @@
 #' @export
 #' 
 svarwrap  <-  function(x,
-                       ydata = NULL,
-                       xdata=NULL,
-                       lags = 5,
-                       Tsigbrk = NULL,
                        asig=1,
+                       ydata = NULL,
+                       lags = 5,
+                       xdata=NULL,
+                       const=TRUE,
+                       Tsigbrk = NULL,
                        tight=1,
                        decay=.3,
                        lambda=5,
                        mu=1,
+                       sig=rep(.01, NCOL(ydata)),
+                       w=1,
                        OwnLagMeans=c(1.25, -.25),
                        verbose=FALSE)
 {
@@ -131,7 +134,7 @@ svarwrap  <-  function(x,
                         OwnLagMeans=OwnLagMeans,
                         verbose=FALSE
                         )
-        lh  <- -vout$w             
+        lh  <- -vout$mdd             
         lh  <-  lh - lplmd - allh ##marginal posterior | lmd, A
        
         if(verbose) {
