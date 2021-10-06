@@ -78,6 +78,8 @@ svarwrap  <-  function(x,
 ######################################
     ## Preparing and formatting data
 ######################################
+    ## Note:  Tsigbrk here is times of *changes* in regime.  Does not include
+    ## start or end of the real data.  This changes in svmdd() and svar().
     nVar <- dim(ydata)[2]
     T <- dim(ydata)[1]
     A <- matrix(x[1:nVar^2], nVar, nVar)
@@ -94,11 +96,12 @@ svarwrap  <-  function(x,
 ######
     ## Preparing lmd
 ######
-    nSig  <-  length(Tsigbrk)
+    nSig  <-  NROW(Tsigbrk) + 1         # NROW works whether Tsigbrk is
+                                        # vector or matrix
     lmd <- matrix(0, nVar, nSig)
     lmd[ , -nSig]  <-  x[nVar^2 + (1:(nVar * (nSig - 1)))]
     lmd[ , nSig] <- nSig - apply(lmd[ , -nSig, drop=FALSE], 1, sum)
-    ## last period's variances are fixed so (arithmetic) average is   
+    ## last period's variances are fixed so (arithmetic) average is one.   
     
 ######################################
     ## Estimating the model
@@ -131,12 +134,17 @@ svarwrap  <-  function(x,
                         decay=decay,
                         lambda=lambda,
                         mu=mu,
+                        w=1,
+                        sig=rep(.01, NCOL(ydata)),
                         OwnLagMeans=OwnLagMeans,
-                        verbose=FALSE
+                        verbose=verbose
                         )
-        lh  <- -vout$mdd             
+        lh  <- if (!verbose) {
+                   -vout
+               } else {
+                   -vout$mdd
+               }
         lh  <-  lh - lplmd - allh ##marginal posterior | lmd, A
-       
         if(verbose) {
             return(list(lh=lh,
                         vout=vout,
