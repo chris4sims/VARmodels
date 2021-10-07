@@ -109,7 +109,7 @@ svar <- function(ydata=NA,
     dim(X) <- c(Tsmpl,nvar*lags)
     X <- cbind(X, xdata[smpl,,drop=FALSE])
     y <- ydata[smpl,,drop=FALSE]
-    ## Everything now set up with input data for y=Xb+e 
+    ## Everything now set up with input data for y=Xb+e
     if (!is.null(Tsigbrk)) {
         nsig <- length(Tsigbrk)
     } else {
@@ -149,10 +149,10 @@ svar <- function(ydata=NA,
         lso <- lsfit(Xq, yq, intercept=FALSE)
         ## intercept already in X. resids should be unit vce.
         B[ , iq] <- lso$coefficients
-        Rq <- qr.R(lso$qr)
-        xxi[ , , iq] <- solve(crossprod(Rq))
+        Rqi <- solve(qr.R(lso$qr))
+        xxi[ , , iq] <- Rqi %*% t(Rqi)
         u[ , iq] <- lso$residuals
-        logdetxxi[iq] <- -2 * sum(log(abs(diag(Rq))))
+        logdetxxi[iq] <- 2 * sum(log(abs(diag(Rqi))))
         snglty[iq] <- (logdetxxi[iq] == -Inf)
     }
     uraw <- t(solve(A0, t((1/t(wtseries)) * u)))
