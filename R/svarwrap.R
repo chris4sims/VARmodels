@@ -59,7 +59,6 @@
 #' @export
 #' 
 svarwrap  <-  function(x,
-                       asig=1,
                        ydata = NULL,
                        lags = 5,
                        xdata=NULL,
@@ -70,7 +69,6 @@ svarwrap  <-  function(x,
                        lambda=5,
                        mu=1,
                        sig=rep(.01, NCOL(ydata)),
-                       w=1,
                        OwnLagMeans=c(1.25, -.25),
                        verbose=FALSE)
 {
@@ -91,8 +89,9 @@ svarwrap  <-  function(x,
     ## Prior on A
 ######
    
-    allh <- -.5 * sum((A - diag(nVar) * 100 * asig)^2) / (asig^2 * 4e4) -
-        nVar^2 * (log (2 * pi) / 2 + log(200 * asig))
+    allh <- -.5 * sum((A - diag(1/sig))^2 * (4 * (sig %o% sig))) -
+        nVar^2 * log (2 * pi) / 2 + nVar * sum(log(sig))  +.5 * nVar^2 * log(4)
+    ## aij ~ N(deltaij/sigi, 4/(sigi * sigj))
 ######
     ## Preparing lmd
 ######
@@ -134,8 +133,8 @@ svarwrap  <-  function(x,
                         decay=decay,
                         lambda=lambda,
                         mu=mu,
-                        w=1,
                         sig=rep(.01, NCOL(ydata)),
+                        w=0,            #temporary to see if A0 prior is a subst
                         OwnLagMeans=OwnLagMeans,
                         verbose=verbose
                         )
