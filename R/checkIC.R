@@ -46,13 +46,18 @@
 #' @md
 #' 
 checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
-    if (!is.null(vout$A0)){        #svmdd output, not rfmdd
+    if (!is.null(vout$A0)) {              #svmdd or svarwrap output
         A0i <- solve(vout$A0)
-        By <- tensor(A0i, vout$var$By, 2, 1)
-        Bx <- A0i %*% vout$var$Bx
-    } else {
-        By <- vout$var$By
-        Bx <- vout$var$Bx
+        if (!is.null(vout$vout)){           #svarwrap
+            By <- tensor(A0i, vout$vout$var$By, 2, 1)
+            Bx <- A0i %*% vout$vout$var$Bx
+        } else {                            #svmdd
+            By <- tensor(A0i, vout$var$By, 2, 1)
+            Bx <- A0i %*% vout$var$Bx
+        }
+    } else {                            #rfmdd
+        By <- vout$By
+        Bx <- vout$Bx
     }
     ny <- dim(By)[1]
     lags <- dim(By)[3]
