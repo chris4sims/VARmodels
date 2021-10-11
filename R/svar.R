@@ -172,6 +172,14 @@ svar <- function(ydata=NA,
         Bx <- matrix(B[nvar * lags + (1:nx), ], nx, nvar)
         Bx <- t(Bx)
     }
-    return(list(By=By, Bx=Bx, u=u, uraw=uraw, xxi= xxi, snglty=snglty, logdetxxi=logdetxxi,
-                lmdseries=lmdseries, call=match.call()))
+    return(list(A0=A0,
+                By=By,
+                Bx=Bx,
+                u=u,
+                uraw=uraw,
+                xxi= xxi,
+                snglty=snglty,
+                logdetxxi=logdetxxi,
+                lmdseries=lmdseries,
+                call=match.call()))
 }
