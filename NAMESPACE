@@ -2,6 +2,7 @@
 
 export(SVARhtskdmdd)
 export(SVARpostdraw)
+export(almdDraw)
 export(checkIC)
 export(doubling)
 export(fcast)
