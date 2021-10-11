@@ -71,6 +71,8 @@
 #'               negative, does not include x's in the dummy observation.
 #' @param mu Weight on variable-by-variable sum of coeffs dummy observations.
 #'           if negative, does not include x's in the dummy observations
+#' @param sig Scales for prior on A0. Should be the order of magnitude of
+#'            the std deviations of first differences of the variables, usually.
 #' @param OwnLagMeans Prior expectation of own lag coefficients in reduced form.
 #'                    See details.
 #' @param flat Omit conventional uninformative prior on \code{Sigma}?
@@ -101,7 +103,6 @@ svmdd <- function(ydata,
                   tight=3,
                   decay=.3,
                   sig=rep(.01, NCOL(ydata)),
-                  w=1,
                   xsig=NULL,
                   OwnLagMeans = c(1.25, -.25),
                   flat=FALSE,
@@ -323,7 +324,6 @@ svmdd <- function(ydata,
                     tight=tight,
                     decay=decay,
                     sig=sig,
-                    w=w,
                     lambda=lambda,
                     mu=mu,
                     OwnLagMeans=OwnLagMeans),
