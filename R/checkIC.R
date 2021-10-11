@@ -28,11 +28,10 @@
 #'            is the constant.
 #' @return
 #' \describe{
-#'    \item{cointmat}{`ny` by `ny` matrix. If `m  < ny` eigenvalues are
+#'    \item{cointvecs}{`ny - m` by `ny` matrix. If `m  < ny` eigenvalues are
 #'                     big, as determined by `T` and `divider`, the cointegrating
 #'                     vectors (linear combinations of `y` that grow more slowly
-#'                     than the `m` large-root components) are the bottom 
-#'                     `ny - m` rows of cointmat.}
+#'                     than the `m` large-root components) the rows of cointmat.}
 #'    \item{z0tstat}{A vector of ratios of deviations of initial condition
 #'                   values of the stationary components of `y` from their means,
 #'                   to their implied uncondiional standard errors.  If any
@@ -46,27 +45,43 @@
 #' @md
 #' 
 checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
-    if (!is.null(vout$A0)) {              #svmdd or svarwrap output
+    if (!is.null(vout$A0)) {              #svar, svmdd or svarwrap output
         A0i <- solve(vout$A0)
         if (!is.null(vout$vout)){           #svarwrap
             By <- tensor(A0i, vout$vout$var$By, 2, 1)
             Bx <- A0i %*% vout$vout$var$Bx
-        } else {                            #svmdd
-            By <- tensor(A0i, vout$var$By, 2, 1)
-            Bx <- A0i %*% vout$var$Bx
+            uts <- vout$vout$uts
+        } else {                            
+            if (!is.null(vout$var)) {     #svmdd
+                By <- tensor(A0i, vout$var$By, 2, 1)
+                Bx <- A0i %*% vout$var$Bx
+                uts <- vout$uts
+            } else {                        #svar
+                By <- tensor(A0i, vout$By, 2, 1)
+                Bx <- A0i %*% Bx
+                uts <- vout$uraw
+            }
+        }        
+    } else {                           #no A0, so its reduce-form
+        if (!is.null(vout$var)) {       #rfmdd                         
+            By <- vout$var$By
+            Bx <- vout$var$Bx
+            uts <- vout$var$u
+        } else {                        #rfvar
+            By <- vout$By
+            Bx <- vout$Bx
+            uts <- vout$u
         }
-    } else {                            #rfmdd
-        By <- vout$By
-        Bx <- vout$Bx
     }
     ny <- dim(By)[1]
     lags <- dim(By)[3]
-    uts <- vout$uts
     utsmat <- matrix(0, 0, ny)
-    if (!is.null(uts)) {
+    if (is.list(uts)) {
         for (ils in 1:length(uts)) {
             utsmat <- rbind(utsmat, uts[[ils]])
         }
+    } else {
+        utsmat <- uts
     }
     A <- sysmat(By)
     if (is.null(T) && is.null(divider)) {
@@ -92,8 +107,7 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
                                vbl=dimnames(vout$uts[[1]])[[2]][luout$rowperm[1:ny]])
     Q <- sschout$Q
     TT <- sschout$T
-    browser()
-    if (!is.null(ic) && !is.null(vout$uts)
+    if (!is.null(ic) && !is.null(uts)
         && (!is.null(T) || (is.null(T) && divider < 1))) {
         Ve <- matrix(0, ny * lags, ny * lags)
         Ve[1:ny, 1:ny] <- cov(utsmat)
@@ -108,17 +122,21 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
         z0 <- t(Conj(Q))[ndxstat, ] %*% c(t(ic[lags:1, ]))
         z0tstat <- (z0 - muz) / sqrt(diag(Vz))
         tzorder <- order(abs(z0tstat), decreasing=TRUE)
-        bigroots <- roots[1:nbig]
+        if(nbig > 0) {
+            bigroots <- roots[1:nbig]
+        } else {
+            bigroots <- NULL
+        }
         smallroots <- roots[ndxstat][tzorder]
         z0tstat <- z0tstat[tzorder]
         z0chisq <- t(Conj(z0 - muz)) %*% solve(Vz, z0 - muz)
-        if (nbig < ny){
-            cointvecs <- cointmat[-(1:nbig), ]
-            if(all(abs(Im(cointvecs)) < 1e4 * .Machine$double.eps))
-                cointvecs <- Re(cointvecs)  
-        } else {
-            cointvecs <- NULL
-        }
+    }
+    if (nbig < ny){
+        cointvecs <- Re(cointmat[-(1:nbig), ])
+        ## If any row is complex, it is paired with an all-real
+        ## row that is a multiple of its imaginary part.
+    } else {
+        cointvecs <- NULL
     }
     return(list(cointvecs=cointvecs, z0tstat=z0tstat, z0chisq=Re(z0chisq),
                 bigroots=bigroots, smallroots=smallroots))
