@@ -1,5 +1,5 @@
 vec2alm <- function(x, nv) {
-    if (!is.matrix(x) )  x <- matrix(x, nrow=1)
+    if (!is.matrix(x) || NCOL(x) == 1)  x <- matrix(x, nrow=1)
     ndraw <- dim(x)[1]
     nx <- dim(x)[2]
     A <- array(x[ , 1:nv^2], c( ndraw, nv, nv))
