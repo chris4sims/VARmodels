@@ -134,7 +134,6 @@ svarwrap  <-  function(x,
                         lambda=lambda,
                         mu=mu,
                         sig=rep(.01, NCOL(ydata)),
-                        w=0,            #temporary to see if A0 prior is a subst
                         OwnLagMeans=OwnLagMeans,
                         verbose=verbose
                         )
