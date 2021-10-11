@@ -22,6 +22,7 @@
 #' @md
 #'
 almdDraw <- function(svwout,
+                     const=TRUE,
                      x0=NULL,
                      H,
                      jmpscale,
@@ -32,29 +33,28 @@ almdDraw <- function(svwout,
                      ) {
     nv <- dim(svwout$A0)[1]
     if (is.null(x0)) {
-        nsig <- dim(lmd)[2]
-        x0 <- c(svwout$A0, svout$lmd[ , 1:(nsig - 1)])
+        nsig <- dim(svwout$lmd)[2]
+        x0 <- c(svwout$A0, svwout$lmd[ , 1:(nsig - 1)])
     }
-    if (
     svwarg <- with(svwout, list(ydata=ydata, lags=dim(vout$var$By)[3],
-                                xdata=xdata, const=const, Tsigbrk=Tsigbrk,
-                                tight=prior$tight,
-                                decay=prior$decay, sig=prior$sig,
-                                lambda=prior$lambda,
-                                mu=prior$mu, OwnLagMeans=prior$OwnLagMeans,
+                                xdata=xdata, const=const, Tsigbrk=vout$Tsigbrk,
+                                tight=vout$prior$tight,
+                                decay=vout$prior$decay, sig=vout$prior$sig,
+                                lambda=vout$prior$lambda,
+                                mu=vout$prior$mu, OwnLagMeans=vout$prior$OwnLagMeans,
                                 verbose=FALSE
                                 )
                    )
     npar <- length(x0)
     draws <- matrix(0, nit, npar + 1)
-    draws[1, ] <- x0
     lh0 <- -svwout$lh
+    draws[1, ] <- c(x0, lh0)
     Hfac <- chol(H)
     accrate <- 0.0
     for (it in 2:nit) {
         xnew <- x0 + jmpscale * crossprod(Hfac, rnorm(npar))
-        AlmNew <- vec2alm(xnew)
-        lhnew <- do.call(svarwrap, c(svwarg, A0=AlmNew$A0, lmd=AlmNew$lmd))
+        AlmNew <- vec2alm(xnew, nv )
+        lhnew <- -do.call(svarwrap, c(svwarg, list(A0=AlmNew$A, lmd=AlmNew$lmd)))
         if (lhnew - lh0 > -rexp(1)) {
             draws[it, 1:npar] <- xnew
             draws[it, npar + 1] <- lhnew
@@ -68,8 +68,6 @@ almdDraw <- function(svwout,
         if (it %% accratefrq == 0) {
             print(paste("it",it, ": accrate", accrate))
         }
-    return(draws)
     }
-        
-        
-        
+    return(draws)
+}
