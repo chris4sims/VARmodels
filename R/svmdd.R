@@ -212,9 +212,13 @@ svmdd <- function(ydata,
     ## What about no-prior, or training sample only, cases?
     ## Should then skip vp call, not add column to lmd, not add a "dummy regime"
     ## in Tsigbrk.
-    vp <- varprior(nv,nx,lags, tight=tight, decay=decay, sig=sig, xsig=xsig,
-                   w=w, lambda=lambda, mu=mu, ybar=ybar,
+    vp <- varprior(nv,nx,lags, tight=tight, decay=decay, w=0, sig=sig, xsig=xsig,
+                   lambda=lambda, mu=mu, ybar=ybar,
                    xbar=xbar, OwnLagMeans=OwnLagMeans)
+    ## varprior has a w argument, because rfmdd might use the dummy
+    ## observations of this type; but svmdd puts a prior on A0 directly,
+    ## so w does not appear in its argument list.
+    ##
     if (T > max(breaks)) breaks <- c(breaks, T)
     if (isTRUE(length(vp$pbreaks) > 0)) breaks <- c(breaks, max(breaks) + vp$pbreaks)
     ## varprior returns NULL ydum and xdum if there are no prior dummies at all.
