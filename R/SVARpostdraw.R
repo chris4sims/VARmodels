@@ -4,9 +4,9 @@
 #'
 #' @details
 #' Takes as input draws from the marginal on the contemporaneous coefficient
-#' matrix `A` and the relative variances `lambda` across time blocks.  Returns
+#' matrix `A` and the relative variances `lmd` across time blocks.  Returns
 #' draws from the coefficients on lags and the impulse response function,
-#' conditional on the corresponding `A` and `lambda` draws.
+#' conditional on the corresponding `A` and `lmd` draws.
 #'
 #'  The `asig` parameter scales the prior on `A0`, but `A0` always has a scaled
 #' identity matrix as its mean.  With `asig=1`, all elements of `A0` have
@@ -39,50 +39,48 @@
 #' * `vprior`:  list with elements `sig` and `w`.  `sig` is a vector giving
 #'              the prior expectation of the standard deviations of the variable
 #'              innovations.  **This is required, with no default.**
-#' @param Adraws ndraw by nvar by nvar array of draws of $A$
-#' @param lmddraws ndraw by nvar by nsig array of `lambda` draws
+#' @param xdraws draws of `A0` and all but last column of `lmd`, collapsed into
+#'               a vecttor for each draw. Usualy output of almdDraw().
 #' @param data Matrix of endogenous variable data time series
 #' @param xdata Exogenous variable data matrix.
-#' @param nlags number of lags in the model
-#' @param Tsigbrk Vector of observation numbers of last observation in each
-#'        variance regime.  It starts at 0, does not include end of sample. Its
-#'        length is the number of regimes.
-#' @param const If TRUE, `xdata` does not include a constant and a constant
-#'         vector should be created.
-#' @param  pparams list that contains `asig` and the VAR prior parameters. See
-#'                help for [SVARhtskdmdd()] and the details section here for
-#'                VAR prior parameters.  `asig` is the weight on the A0 prior.
 #' @param horiz The number of periods over which to compute impulse responses.
-#'
-#' @return \item{By}{nvar x nvar x nlags x ndraw array of  reduced form VAR coefficients}
+#' @param svwout A list, in the format of output of [svarwrap()] with
+#'               `verbose=TRUE`. This must match the `svwout` argument of
+#'               [almdDraw()] that generated `xdraws`.
+#' @return
+#' \describe{
+#'         \item{By}{nvar x nvar x nlags x ndraw array of  reduced form VAR coefficients}
 #'         \item{Bx}{nvar x nx x ndraw array of reduced form VAR exogenous, then
 #'                   constant, coefficients.  (Just constants when there are no x's)}
-#'         \item{A}{ndraw x nvar x nvar array of A0 draws}
-#'         \item{lmd}{ndraw x nvar x nsig array of lmd draws}
+#'         \item{A}{nvar x nvar x ndraw array of A0 draws}
+#'         \item{lmd}{nvar x nsig x ndraw array of lmd draws}
+#' }
 #' @export
 #' @md
-SVARpostdraw <- function(Adraws,
-                         lmddraws,
+SVARpostdraw <- function(xdraws,
                          data = NULL,
                          xdata=NULL,
-                         nLags = 5,
-                         Tsigbrk = NULL,
-                         const=TRUE,
-                         pparams = list(
-                             asig=1,
-                             mnprior=list(tight=1, decay=.3),
-                             urprior=list(lambda=5, mu=1),
-                             vprior=list(sig=rep(.01,4), w=1)),
-                         horiz=40) {
-    ndraw <- dim(Adraws)[1]
-    nvar <- dim(Adraws)[2]
-    nsig <- dim(lmddraws)[3]
+                         horiz=40,
+                         svwout) {
+    ndraw <- dim(xdraws)[1]
+    nvar <- dim(data)[2]
+    almdd <- vec2alm(xdraws)
+    Adraws <- almdd$A                   #draws index is last subscript
+    lmddraws <- almdd$lmd
+    nsig <- dim(lmddraws)[2]
     cnstAdd <- if(const) 1 else 0
     if (is.null(xdata)) {
         nx <- cnstAdd
     } else {
         nx <- dim(xdata)[2] + cnstAdd
     }
+    ## Could do the first part of svmdd(), generating dummy
+    ## observations to create args for svar().  This only
+    ## has to be done once.  Not for every draw.  But we
+    ## haven't done this elsewhere in the package, and
+    ## time savings would be small.  Profiling shows nearly
+    ## all time is used by `lsfit`, where the heavy calculation occurs.
+    ##
     nyx <- nvar * nLags + nx
     Bydraw <- array(0, c(nvar, nvar, nLags, ndraw))
     Bxdraw <- array(0, c(nvar, nx, ndraw))
