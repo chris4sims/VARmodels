@@ -194,7 +194,7 @@ varprior <-
         dim(ydum) <- c(lags + 1, nv, lags * nv) # merge all the individual mn dobs
     }
     ydum <- abind(ydum, ydumur, ydum2, along=3) #some of the ydum's could be NULL
-    breaks <- (lags+1) * (1:(dim(ydum)[3] -1)) # end of sample is not a "break".
+    breaks <- (lags+1) * (1:(dim(ydum)[3])) # end of sample is a "break".
     ydum <- aperm(ydum, c(1, 3, 2))
     ydum <- matrix(ydum, ncol=dim(ydum)[3])
     dimnames(ydum) <- list(NULL, names(sig))
