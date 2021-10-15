@@ -73,6 +73,8 @@
 #'           if negative, does not include x's in the dummy observations
 #' @param sig Scales for prior on A0. Should be the order of magnitude of
 #'            the std deviations of first differences of the variables, usually.
+#' @param xsig Scales for the prior on variation in the `x` variables. If there
+#'             is only a constant, this should be `NULL` or zero.
 #' @param OwnLagMeans Prior expectation of own lag coefficients in reduced form.
 #'                    See details.
 #' @param flat Omit conventional uninformative prior on \code{Sigma}?
@@ -328,6 +330,7 @@ svmdd <- function(ydata,
                     tight=tight,
                     decay=decay,
                     sig=sig,
+                    xsig=xsig,
                     lambda=lambda,
                     mu=mu,
                     OwnLagMeans=OwnLagMeans),
