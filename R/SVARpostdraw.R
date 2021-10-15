@@ -40,9 +40,12 @@
 #'              the prior expectation of the standard deviations of the variable
 #'              innovations.  **This is required, with no default.**
 #' @param xdraws draws of `A0` and all but last column of `lmd`, collapsed into
-#'               a vecttor for each draw. Usualy output of almdDraw().
+#'               a vecttor for each draw. Usually output of almdDraw(), with
+#'               last column (log posterior density) stripped.
 #' @param data Matrix of endogenous variable data time series
 #' @param xdata Exogenous variable data matrix.
+#' @param const Is there a constant term? Must mach the `const` argment of
+#'              [almdDraw()] that generated `xdraws`.
 #' @param horiz The number of periods over which to compute impulse responses.
 #' @param svwout A list, in the format of output of [svarwrap()] with
 #'               `verbose=TRUE`. This must match the `svwout` argument of
@@ -60,14 +63,14 @@
 SVARpostdraw <- function(xdraws,
                          data = NULL,
                          xdata=NULL,
+                         const=TRUE,
                          horiz=40,
                          svwout) {
     ndraw <- dim(xdraws)[1]
     nvar <- dim(data)[2]
-    almdd <- vec2alm(xdraws)
+    almdd <- vec2alm(xdraws, nvar)
     Adraws <- almdd$A                   #draws index is last subscript
     lmddraws <- almdd$lmd
-    nsig <- dim(lmddraws)[2]
     cnstAdd <- if(const) 1 else 0
     if (is.null(xdata)) {
         nx <- cnstAdd
@@ -81,38 +84,45 @@ SVARpostdraw <- function(xdraws,
     ## time savings would be small.  Profiling shows nearly
     ## all time is used by `lsfit`, where the heavy calculation occurs.
     ##
-    nyx <- nvar * nLags + nx
-    Bydraw <- array(0, c(nvar, nvar, nLags, ndraw))
+    lags  <- dim(svwout$vout$var$By)[3]
+    Bydraw <- array(0, c(nvar, nvar, lags, ndraw))
     Bxdraw <- array(0, c(nvar, nx, ndraw))
-    irfdraw <- array(0, c(nvar, nvar, horiz, ndraw))
+    nyx <- nvar * lags + nx
     for (id in 1:ndraw) {
-        A <- Adraws[id, , ]
-        Ai <- solve(A)
-        x <- c(A, lmddraws[ id , , -nsig ])
-        bvwout <- bvarwrapEx(x, verbose=TRUE, data=data,
-                             nLags=nLags, Tsigbrk=Tsigbrk, pparams=pparams)
-        xxi <- bvwout$vout$var$xxi
-        ## This is weighted x'x for each of the nvar equations.
-        ## xxch <- apply(xxi, 3, chol) # this creates numerical problems
+        Aid <- Adraws[ , , id]
+        Aidi <- solve(Aid)
+        lmdid <- lmddraws[ , , id]
+        svmout <- svmdd(ydata=data, lags=lags, xdata=xdata, const=const,
+                        A0=Aid, Tsigbrk=svwout$vout$Tsigbrk, lmd=lmdid,
+                        lambda=svwout$vout$prior$lambda,
+                        mu=svwout$vout$prior$mu,
+                        tight=svwout$vout$prior$tight,
+                        decay=svwout$vout$prior$tight,
+                        sig=svwout$vout$prior$sig,
+                        xsig=svwout$vout$prior$xsig,
+                        OwnLagMeans=svwout$vout$prior$OwnLagMeans,
+                        flat=svwout$vout$flat,
+                        ic=svwout$vout$ic,
+                        verbose=TRUE
+                        )
+        xxi <- svmout$var$xxi
         Aplus <- matrix(0, nvar, nyx)
         for (iq in 1:nvar) {
             svdxx <- svd(xxi[ , , iq])
             xxch <- with(svdxx, t(sqrt(d) * t(u)))                      
             xxch <- array(xxch, c(nyx, nyx, nvar))
             Aplus[iq, ] <- xxch[ , , iq] %*% rnorm(nyx) +
-                + c(bvwout$vout$var$By[iq, , ],  bvwout$vout$var$Bx[iq, ])
+                + c(svmout$var$By[iq, , ],  svmout$var$Bx[iq, ])
         }
-        Byx <- Ai %*% Aplus
-        By <- array(Byx[ , 1:(nvar * nLags)], c(nvar, nvar, nLags))
+        Byx <- Aidi %*% Aplus
+        By <- array(Byx[ , 1:(nvar * lags)], c(nvar, nvar, lags))
         Bydraw[ , , , id] <- By
-        Bxdraw[ , , id] <- Byx[ , nvar * nLags + 1:nx, drop=FALSE] # constant is at end
-        ## irfdraw[ , , , id] <- impulsdtrf(vout=list(By=By), smat=Ai, nstep=horiz)
-        ## irf's are drawn in irfBand(), not needed here.
-        
+        Bxdraw[ , , id] <- Byx[ , nvar * lags + 1:nx, drop=FALSE] # constant is at end  
     }
-    ## dimnames(irfdraw) <- list(dimnames(data)[[2]], as.character(1:nvar), NULL)
-    dimnames(Adraws) <- list(NULL, as.character(1:nvar), dimnames(data)[[2]] )
-    dimnames(Bydraw) <- list(dimnames(data)[[2]], dimnames(data)[[2]], NULL, NULL)
+    vnames <- dimnames(data)[[2]]
+    dimnames(Adraws) <- list(as.character(1:nvar), vnames, NULL )
+    dimnames(Bydraw) <- list(vnames, vnames, NULL, NULL)
+    dimnames(lmddraws) <- list(vnames, NULL, NULL)
     return(list(By=Bydraw, Bx=Bxdraw, A=Adraws, lmd=lmddraws))
 }
 
