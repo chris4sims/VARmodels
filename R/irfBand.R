@@ -7,30 +7,42 @@
 #' are found if there is no `smat` argument.  Using `SVARpostdraw()` output, the
 #' `smat` array is filled with the inverses of pdout$A.
 #' 
-#' @param pdout  Output from postdraw.
-#' @param smat If NULL, the transpose of \code{pdout$smat[ , , draw]} is used as
-#'              initial shocks.  Otherwise, this array is used, not transposed. Can be
-#'              a single array, which is used repeatedly.
+#' @param pdout  Output from [postdraw`()] or [SVARpostdraw()].
+#' @param smat Wiht `postdraw` (from [rfvar{}] output, if NULL, the transpose of
+#'             `pdout$smat[ , , draw]} is used as initial shocks.  Otherwise,
+#'              this array is used, not transposed. With SVAR output, the inverse
+#'              of `A0` is used as initial shocks when `smat` is NULL.  `smat`
+#'              Can be a single matrix, used repeatedly.
 #' @param nstep Number of steps ahead to calculate responses.
 #' @param order If non-null, use triangular orthogonalization with this ordering of shocks.
 #' @param pctiles At what percentiles to draw bands. (vector of odd length)
 #' @param whichv logical or numeric vector picking which variables' responses are calculated
-#' @param whichs logical or numeric vector picking which shocks' effects are calculated
+#' @param whichs logical or numeric vector picking which shock effects are calculated
 #' @param main  Character string giving plot title.
 #' @param file  Character string giving name of pdf file to be written.
 #' 
-#' @return nvar x nshocks x nstep x ndraw array of impulse responses.  Returned value is not printed, but can be assigned if you want to keep it.
+#' @return nvar x nshocks x nstep x ndraw array of impulse responses.  Returned
+#'         value is not printed, but can be assigned if you want to keep it.
 #'
 #' @md
 #' @export
-irfBand <- function(pdout, smat=NULL, nstep=40, order=NULL, pctiles=c(5, 16, 50, 84, 95), whichv=NULL, whichs=NULL, main="IRF's with bands", file="IRFwBandPlot.pdf") {
+irfBand <- function(pdout,
+                    smat=NULL,
+                    nstep=40,
+                    order=NULL,
+                    pctiles=c(5, 16, 50, 84, 95),
+                    whichv=NULL,
+                    whichs=NULL,
+                    main="IRF's with bands",
+                    file="IRFwBandPlot.pdf"
+                    ) {
     nv <- dim(pdout$By)[1]
     ndraw <- dim(pdout$By)[4]
     if (!is.null(pdout$A) ) {           #SVAR case
         smat <- array(0, c(nv, nv, ndraw))
-        for (id in 1:ndraw) smat[ , , id] <- solve(pdout$A[id, , ])
-        dimnames(smat) <- list(var=dimnames(pdout$A)[[3]],
-                               shock=dimnames(pdout$A)[[2]],
+        for (id in 1:ndraw) smat[ , , id] <- solve(pdout$A[ , , id])
+        dimnames(smat) <- list(var=dimnames(pdout$A)[[2]],
+                               shock=dimnames(pdout$A)[[1]],
                                NULL)
     } else {                             #rf case
         if (!is.null(smat)) {               #using explicit smat argument
@@ -41,16 +53,17 @@ irfBand <- function(pdout, smat=NULL, nstep=40, order=NULL, pctiles=c(5, 16, 50,
             smat <- pdout$smat
             if (nv > 1) {
                 if(!is.null(order)){
-                    for (id in 1:ndraw) smat[ , , id] <- pchol(crossprod(smat[ , , id]), order)
+                    for (id in 1:ndraw) smat[ , , id] <-
+                                            pchol(crossprod(smat[ , , id]), order)
                 }
-                smat <- aperm(pdout$smat, c(2,1,3)) #transposing
-                dimnames(smat) <- list(NULL, dimnames(pdout$By)[[1]], NULL)
+                dimnames(smat) <- list(dimnames(pdout$By)[[1]], NULL, NULL)
             }    
         }
     }
     ns <- dim(smat)[2]
     resp <- array(0, c(nv, ns, nstep, ndraw))
-    dimnames(resp) <- list(var=dimnames(pdout$By)[[1]], shock=dimnames(smat)[[2]], NULL, NULL)
+    dimnames(resp) <- list(var=dimnames(pdout$By)[[1]],
+                           shock=dimnames(smat)[[2]], NULL, NULL)
     for (id in 1:ndraw) {
         By <- pdout$By[ , , , id, drop=FALSE]
         dim(By) <- dim(By)[1:3]         #in 1x1 case, need to keep initial 3d, not 4th
