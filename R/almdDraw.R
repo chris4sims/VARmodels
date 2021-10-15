@@ -53,7 +53,6 @@ almdDraw <- function(svwout,
     accrate <- 0.0
     for (it in 2:nit) {
         xnew <- x0 + jmpscale * crossprod(Hfac, rnorm(npar))
-        AlmNew <- vec2alm(xnew, nv )
         lhnew <- -do.call(svarwrap, c(list(x=xnew), svwarg ))
         if (lhnew - lh0 > -rexp(1)) {
             draws[it, 1:npar] <- xnew
