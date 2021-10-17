@@ -107,6 +107,8 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
                                vbl=dimnames(vout$uts[[1]])[[2]][luout$rowperm[1:ny]])
     Q <- sschout$Q
     TT <- sschout$T
+    ## check for unusual initial conditions
+    stopifnot("lags implied by ic not matching vout" = NROW(ic) == lags)
     if (!is.null(ic) && !is.null(uts)
         && (!is.null(T) || (is.null(T) && divider < 1))) {
         Ve <- matrix(0, ny * lags, ny * lags)
