@@ -44,7 +44,7 @@
 #' @export
 #' @md
 #' 
-checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
+checkIC <- function(vout, T=NULL, divider=NULL, ic=NULL, icx=1) {
     if (!is.null(vout$A0)) {              #svar, svmdd or svarwrap output
         A0i <- solve(vout$A0)
         if (!is.null(vout$vout)){           #svarwrap
@@ -79,9 +79,11 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
     if (is.list(uts)) {
         for (ils in 1:length(uts)) {
             utsmat <- rbind(utsmat, uts[[ils]])
+            vnames <- dimnames(uts[[1]])[[2]]
         }
     } else {
         utsmat <- uts
+        vnames <- dimnames(uts)[[2]]
     }
     A <- sysmat(By)
     if (is.null(T) && is.null(divider)) {
@@ -94,28 +96,27 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
     nA <- dim(A)[1]
     schout <- Matrix::Schur(A)
     schout <- rsf2csf(schout$Q, schout$T)
-    if (is.null(T)) {                   #Here this implies non-null `divider`
-        compf <- function(x) abs(x) > divider
-    } else {
-        compf <- function(x) abs(x) > 1 | abs(1 - x) < 1/T
+    schout <- schSort(schout, n2sort=ny)
+    roots <- diag(schout$T)
+    luout <- lu(schout$Q[1:ny, 1:ny])
+    cointmat <- solve(luout$L)
+    dimnames(cointmat) <- list(NULL, vbl=vnames[luout$rowperm])
+    Q <- schout$Q
+    TT <- schout$T
+    if (!is.null(T)) {
+        rootsplitter <- 1 - 1/T
+    } else{
+        rootsplitter <- divider
     }
-    sschout <- schdiv(schout, comp=compf)
-    roots <- diag(sschout$T)
-    luout <- lu(sschout$Q)
-    cointmat <- solve(luout$L[1:ny,1:ny])
-    dimnames(cointmat) <- list(NULL,
-                               vbl=dimnames(vout$uts[[1]])[[2]][luout$rowperm[1:ny]])
-    Q <- sschout$Q
-    TT <- sschout$T
+    nbig <- sum(abs(roots) > rootsplitter)
+    ndxstat <- (nbig + 1):(ny * lags)
     ## check for unusual initial conditions
-    stopifnot("lags implied by ic not matching vout" = NROW(ic) == lags)
     if (!is.null(ic) && !is.null(uts)
         && (!is.null(T) || (is.null(T) && divider < 1))) {
+        stopifnot("lags implied by ic not matching vout" = NROW(ic) == lags)
         Ve <- matrix(0, ny * lags, ny * lags)
         Ve[1:ny, 1:ny] <- cov(utsmat)
         Ve <- t(Conj(Q)) %*% Ve %*% Q
-        nbig <- sum(compf(diag(TT)))
-        ndxstat <- (nbig + 1):(ny * lags)
         nsmall <- length(ndxstat)
         TTsmall <- TT[ndxstat,ndxstat]
         Vz <- doubling(TTsmall, Ve[ndxstat, ndxstat])
@@ -124,22 +125,18 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic, icx=1) {
         z0 <- t(Conj(Q))[ndxstat, ] %*% c(t(ic[lags:1, ]))
         z0tstat <- (z0 - muz) / sqrt(diag(Vz))
         tzorder <- order(abs(z0tstat), decreasing=TRUE)
-        if(nbig > 0) {
-            bigroots <- roots[1:nbig]
-        } else {
-            bigroots <- NULL
-        }
-        smallroots <- roots[ndxstat][tzorder]
         z0tstat <- z0tstat[tzorder]
         z0chisq <- t(Conj(z0 - muz)) %*% solve(Vz, z0 - muz)
-    }
-    if (nbig < ny){
-        cointvecs <- Re(cointmat[-(1:nbig), ])
-        ## If any row is complex, it is paired with an all-real
-        ## row that is a multiple of its imaginary part.
+        z0chisq <- Re(z0chisq)
+        smallroots <- roots[ndxstat][tzorder]
     } else {
-        cointvecs <- NULL
+        z0tstat <- NULL
+        z0chisq <- NULL
+        smallroots <- smallroots
     }
-    return(list(cointvecs=cointvecs, z0tstat=z0tstat, z0chisq=Re(z0chisq),
-                bigroots=bigroots, smallroots=smallroots))
+    cointvecs <- Re(cointmat)
+    ## If any row is complex, it is paired with an all-real
+    ## row that is a multiple of its imaginary part.
+    return(list(cointvecs=cointvecs, z0tstat=z0tstat, z0chisq=z0chisq,
+                roots=roots, nbig=nbig, tsmallroots=smallroots))
 }        
