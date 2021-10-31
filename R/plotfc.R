@@ -47,7 +47,8 @@ plotfc <-
         ##op <- par(mfrow=c(nr,nc))           #subsequent figures in an nr, nc array, by row
         center <- dim(fc)[3] %/% 2 + 1 # assumes odd number of plot lines
         for (ir in 1:nr) {
-            par(mai=c(1/nr,2/nr,2/nr,1))
+            ##par(mai=c(1/nr,2/nr,2/nr,1))
+            par(mai=c(1/nr,1,2/nr,1))
             prts <- pr[ , ir, center]
             tsp(prts) <- tspfc
             plot.ts(prts,
