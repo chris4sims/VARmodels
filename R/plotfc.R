@@ -2,7 +2,8 @@
 #'
 #' Plots an array of forecast graphs
 #' 
-#' @param fc 3-d array of impulse responses.
+#' @param fc 3-d array of forecasts.
+#' @param tspfc time series tsp attribute of the forecasts (start, end, frequency)
 #' @param var Indexes of variables to be plotted, if not all of them.
 #' @param type "multiple" creates an array of plots. "single" puts them
 #'              all on same plot (usually responses of just one variable).
