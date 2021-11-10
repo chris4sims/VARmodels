@@ -132,7 +132,7 @@ checkIC <- function(vout, T=NULL, divider=NULL, ic=NULL, icx=1) {
     } else {
         z0tstat <- NULL
         z0chisq <- NULL
-        smallroots <- smallroots
+        smallroots <- NULL
     }
     cointvecs <- Re(cointmat)
     ## If any row is complex, it is paired with an all-real
