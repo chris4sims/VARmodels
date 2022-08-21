@@ -8,9 +8,9 @@
 #'   is a matrix square root of \code{sig} (i.e. satisfies \code{crossprod(w)==sig})
 #'   but not triangular.
 #' @export
-pchol <-
-function(sig, porder) {
-  if(is.null(dim(sig))) dim(sig) <- c(1,1)
-  invporder <- match(1:length(porder), porder)
+pchol <- function(sig, porder) {
+  if (is.null(dim(sig)))
+    dim(sig) <- c(1, 1)
+  invporder <- match(seq_along(porder), porder)
   return(chol(sig[porder, porder])[invporder, invporder])
 }

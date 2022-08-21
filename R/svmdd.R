@@ -21,7 +21,7 @@
 #' If it is a `nv` by `m` matrix, each row is the prior mean of the coefficients
 #' on the first `m` lags in the corresponding equation.
 #'
-#' The default `OwnLagMeans=c(1.25, -1.25)` is close to the optimal second-order
+#' The default `OwnLagMeans=c(1.25, -.25)` is close to the optimal second-order
 #' univariate AR coefficients when the variable is a unit-averaged continuous time
 #' Wiener process.  This works well for variables like GDP or investment, which
 #' cumulate through time.  For data that are sampled rather than averaged, like

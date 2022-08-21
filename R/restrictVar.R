@@ -63,7 +63,7 @@
 #' It uses the odds ratio computed from the prior alone to reweight the
 #' hypotheses so that the prior probabilities on restricted and unrestricted
 #' models is equal.  If \code{or} is large, it implies strong
-#' evidence in the data against the hypothesis.  All the he odds ratios are
+#' evidence in the data against the hypothesis.  All the  odds ratios are
 #' calculated using a local quadratic approximation to the log posterior density.
 #' This is the same idea as the BIC or Schwarz criterion, but here we do not
 #' omit terms that are large when the number of parameters is large, even if
