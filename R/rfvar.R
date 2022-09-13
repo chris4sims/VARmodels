@@ -9,18 +9,19 @@
 #' 
 #' The prior is implemented outside this program with dummy observations, which
 #' are included, after the "real" data, at the end of `ydata`.  The `breaks`
-#' vector specifies rows of `ydata` after which there are lags rows that are
-#' used as initial conditions for the next span of data.  Dummy observations
-#' for a prior are usually single blocks of lags+1 rows.  But `breaks` can also
+#' vector specifies rows of `ydata` after which the next lags rows are initial
+#' conditions for the next batch of data. Dummy observations for a prior 
+#' are usually single blocks of lags+1 rows.  But `breaks` can also
 #' be used to omit blocks of rows of `ydata`, or to specify where data for
 #' a specific country ends if a single VAR is being fit to data for several
-#' countries.  
+#' countries. `breaks` includes, as its last element, the number of rows in 
+#' `ydata`.
 #'
 #' @param ydata `T x nvar` dependent variable data matrix.
 #' @param lags number of lags in the VAR
 #' @param xdata `T x nx` exogenous variable data matrix.
 #' @param breaks Vector of row numbers in `ydata` and `xdata` after which
-#'               there is a break.
+#'               there is a break, including T.
 #' 
 #' @return \describe{
 #'    \item{By}{nvar x nvar x lags array of coefficients on lagged ys.
@@ -71,11 +72,12 @@ rfvar <- function(ydata=NULL,
     else {
         nbreaks<-length(breaks)
     }
-    breaks <- c(0,breaks,T)
+    ## breaks <- c(0,breaks,T)
+    breaks <- c(0,breaks)
     if(any(breaks[2:length(breaks)] < breaks[1:(length(breaks)-1)]))
         stop("list of breaks must be in increasing order\n")
     smpl <- NULL
-    for (nb in 2:(nbreaks + 2)) {
+    for (nb in 2:(nbreaks + 1)) {
         ## if ( breaks[nb] > breaks[nb-1] + lags )
         ## Because data is already stacked up, every batch of data after
         ## a break has at least lags +1 rows.
