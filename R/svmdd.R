@@ -5,7 +5,7 @@
 #'
 #' @details The model is \deqn{A(L)y(t) = \varepsilon(t),} with \eqn{\varepsilon(t)}
 #' having a diagonal covariance matrix that varies over time.  The variances change
-#' at the dates in  `Tsigbreak', and their relative sizes are in the `lmd' matrix.
+#' at the dates in  `Tsigbreak`, and their relative sizes are in the `lmd` matrix.
 #' 
 #' @details The marginal density results are only available if the prior is proper, which
 #' usually requires all or most of the prior parameters to be non-zero.  But
@@ -66,7 +66,6 @@
 #'               columns for periods.  Row-averages normalized to one.
 #' @param tight Overall tightness of Minnesota prior. `1/tight` is own lag std dev
 #' @param decay Standard deviations of lags shrink as `lag^(-decay)`.
-#'                  walk behavior
 #' @param lambda Weight on the co-persistence prior dummy observation.  If
 #'               negative, does not include x's in the dummy observation.
 #' @param mu Weight on variable-by-variable sum of coeffs dummy observations.

@@ -91,6 +91,7 @@ SVARhtskdmdd <- function(ydata,lags,xdata=NULL, const=TRUE, A0, lmd, Tsigbrk, br
     if (!is.null(xdata) ) stopifnot( dim(xdata)[1] == T)
     Tx <- dim(xdata)[1]
     nx <- dim(xdata)[2]
+    ## line below uses old syntax for varprior call.  Needs to be fixed. (2022-09-06)
     vp <- varprior(nv,nx,lags,mnprior,vprior, urprior=urprior, ybar=ybar, nstat=nstat) # vp$: ydum,xdum,pbreaks
     ## ## -------- set lmd for prior dummies.  No longer needed since we're not logging lmd
     ## if (!is.null(dim(lmd))) {
