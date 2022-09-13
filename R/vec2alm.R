@@ -23,6 +23,10 @@ vec2alm <- function(x, nv) {
     lmd <- abind(lmd, nSig - apply(lmd, 1:2, sum), along=3)
     A <- aperm(A, c(2, 3, 1))
     lmd <- aperm(lmd, c(2, 3, 1))
+    if (ndraw == 1) {
+      A <- A[ , , 1]
+      lmd <- lmd[ , , 1]
+    }
     ## permutation makes printout look better for small ndraw
     return(list(A=A, lmd=lmd))
 }
