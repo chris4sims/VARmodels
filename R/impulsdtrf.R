@@ -1,6 +1,6 @@
 #' Impulse responses for VAR
 #'
-#' Uses output in \code{rfvar3} format to construct impulse responses.
+#' Uses output in \code{rfvar} format to construct impulse responses.
 #'
 #' To use this with output from \code{postdraw}, create a dummy \code{vout} with
 #' \code{vout$By=pout$By[ , , ,id]} and provide \code{smat=pout$smat[ , ,id]}.
@@ -9,7 +9,8 @@
 #' `postdraw()` has to be transposed.  The routine also works with
 #' singular `smat` or with `smat` column dimension less than its row dimension.
 #'
-#' @param vout output from VAR estimatiion
+#' @param vout Output from VAR estimation, `rfmdd()` or `svmdd` or the `$vout` 
+#'             element from `svarwrap()` invoked with `verbose=TRUE`.
 #' @param  smat  If order and smat are NULL, the impulse responses will be for
 #'               a cholesky decomp with variables ordered as in \code{vout}.
 #'               More generally, smat can be any set of initial values for the
@@ -36,7 +37,7 @@ impulsdtrf <- function(vout = NULL,
     # svar, rather than rfvar
     A0 <- vout$A0
     if (is.null(dimnames(A0))) {
-      dimnames(A0) <- list(as.character(1:7), dimnames(vout$uts)[[2]])
+      dimnames(A0) <- list(as.character(1:dim(A0)[1]), dimnames(vout$uts)[[2]])
     }
     A0i <- solve(A0)
     B <- tensor(A0i, vout$var$By, 2, 1)
