@@ -37,6 +37,11 @@
 #'               negative, does not include x's in the dummy observation.
 #' @param mu Weight on variable-by-variable sum of coeffs dummy observations.
 #'           if negative, does not include x's in the dummy observations
+#' @param sig Vector of prior guesses at standard deviations of reduced form
+#'            residuals.
+#' @param alpha Parameter of symmetric Dirichlet distribution for the elements
+#'              of each row of the lmd matrix.  Increasing alpha increases the
+#'              prior's shrinkage toward equal variances in sub-periods.
 #' @param OwnLagMeans Prior expectation of own lag coefficients in reduced form.
 #'                    See details.
 #' @param flat Omit conventional uninformative prior on \code{Sigma}?
@@ -69,6 +74,7 @@ svarwrap  <-  function(x,
                        lambda=5,
                        mu=1,
                        sig=rep(.01, NCOL(ydata)),
+                       alpha = 6,
                        OwnLagMeans=c(1.25, -.25),
                        verbose=FALSE)
 {
@@ -91,7 +97,10 @@ svarwrap  <-  function(x,
    
     allh <- -.5 * sum((A - diag(1/sig))^2 * (4 * (sig %o% sig))) -
         nVar^2 * log (2 * pi) / 2 + nVar * sum(log(sig))  +.5 * nVar^2 * log(4)
-    ## aij ~ N(deltaij/sigi, 4/(sigi * sigj))
+    ## Should allow at least scaling of the sig vector, since that vector is
+    ## used also in setting the dummy observation part of the prior.
+    ## aij ~ N(deltaij/sigi, .25/(sigi * sigj))
+    ## Original intent was 4, not .25.
 ######
     ## Preparing lmd
 ######
@@ -118,9 +127,10 @@ svarwrap  <-  function(x,
          
     } else { #### proceed normally
         ## lmd prior
-        lpL <- apply(log(lmd) - log(nSig),1,sum) - lgamma(2) * nSig + lgamma(2 * nSig)
+        lpL <- (alpha - 1) * apply(log(lmd) - log(nSig), 1, sum) -
+            lgamma(alpha) * nSig + lgamma(alpha * nSig)
         lplmd <- sum(lpL)  - nVar *  (nSig - 1) * log(nSig) 
-        ## This is Dirichlet(2) on lmd/nSig, converted by Jacobian to a density
+        ## This is Dirichlet(alpha) on lmd/nSig, converted by Jacobian to a density
         ## for lmd itself.
         vout  <-  svmdd(ydata,
                         lags = lags,
