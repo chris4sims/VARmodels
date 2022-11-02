@@ -124,14 +124,13 @@ svar <- function(ydata=NA,
     }
     lmdndx <- rep(1:nsig, times=diff(Tsigbrk))
     lmdseries <- lmd[ , lmdndx]
-    if ( Tsmpl < dim(y)[1] ) {      #dummy obs formed in rfvar3
-        ## Should not be combining this branch with dummy obs's from varprior()
-        ## already included in ydata.
-        lmdp <- apply(lmdseries[ ,smpl], 1, mean)
-        lmdseries <- cbind(lmdseries[ , smpl], matrix(lmdp, nvar, dim(y)[1] - Tsmpl))
-    } else {
+    # Tsmpl == dim(y)[1]) according to above code, so this if clause pointless.
+    # if ( Tsmpl < dim(y)[1] ) {      
+    #     lmdp <- apply(lmdseries[ ,smpl], 1, mean)
+    #     lmdseries <- cbind(lmdseries[ , smpl], matrix(lmdp, nvar, dim(y)[1] - Tsmpl))
+    # } else {
         lmdseries <- lmdseries[ , smpl]
-    }
+    #}
     ## i.e., use 1 as relative variance for dummy observation weights.  
     nX <- dim(X)[2]
     ya0 <- y %*% t(A0)
