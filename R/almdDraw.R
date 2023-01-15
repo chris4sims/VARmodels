@@ -42,7 +42,8 @@ almdDraw <- function(svwout,
                                 decay=vout$prior$decay, sig=vout$prior$sig,
                                 lambda=vout$prior$lambda,
                                 mu=vout$prior$mu, OwnLagMeans=vout$prior$OwnLagMeans,
-                                verbose=FALSE
+                                verbose=FALSE,
+                                alpha = alpha
                                 )
                    )
     npar <- length(x0)
