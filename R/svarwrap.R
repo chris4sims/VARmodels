@@ -153,15 +153,16 @@ svarwrap  <-  function(x,
                    -vout$mdd
                }
         lh  <-  lh - lplmd - allh ##marginal posterior | lmd, A
-        if(verbose) {
-            return(list(lh=lh,
-                        vout=vout,
-                        A0=A,
-                        lmd = lmd,
-                        lplmd = lplmd,
-                        allh = allh
-                        )
-                   )            
+        if (verbose) {
+          return(list(
+            lh = lh,
+            vout = vout,
+            A0 = A,
+            lmd = lmd,
+            lplmd = lplmd,
+            allh = allh,
+            alpha = alpha
+          ))
         } else {
             ## print(lh)
             return(lh)
