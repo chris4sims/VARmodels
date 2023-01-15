@@ -77,7 +77,7 @@ rfvar <- function(ydata=NULL,
     if(any(breaks[2:length(breaks)] < breaks[1:(length(breaks)-1)]))
         stop("list of breaks must be in increasing order\n")
     smpl <- NULL
-    for (nb in 2:(nbreaks)) {
+    for (nb in 2:(nbreaks + 1)) {
         ## if ( breaks[nb] > breaks[nb-1] + lags )
         ## Because data is already stacked up, every batch of data after
         ## a break has at least lags +1 rows.
