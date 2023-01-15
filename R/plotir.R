@@ -13,7 +13,7 @@
 #' @param shock Indexes of shocks to be plotted, if not all of them.
 #' @param type "multiple" creates an array of plots. "single" puts them
 #'              all on same plot (usually responses of just one variable).
-#'              (Curent version ignores this argument, always assumes "multiple".)
+#'              (Current version ignores this argument, always assumes "multiple".)
 #' @param main Title for plot.
 #' @param yax.flip Alternate sides of small plots on which y-axis labels appear?
 #' @param vfirst Variables vary by row? Otherwise shocks do.

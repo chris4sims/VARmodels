@@ -28,19 +28,22 @@
 #'            is the constant.
 #' @return
 #' \describe{
-#'    \item{cointvecs}{`ny - m` by `ny` matrix. If `m  < ny` eigenvalues are
+#'    \item{cointvecs}{`ny` by `ny` matrix. If `m  < ny` eigenvalues are
 #'                     big, as determined by `T` and `divider`, the cointegrating
 #'                     vectors (linear combinations of `y` that grow more slowly
-#'                     than the `m` large-root components) the rows of cointmat.}
+#'                     than the `m` large-root components) are spanned by the 
+#'                     last `n - m` rows of cointmat.}
 #'    \item{z0tstat}{A vector of ratios of deviations of initial condition
 #'                   values of the stationary components of `y` from their means,
 #'                   to their implied uncondiional standard errors.  If any
 #'                   of these are large (e.g., > 3.5), the model implies
 #'                   initial transients that are unlikely to occur again.}
-#'    \item{z0chisq}{A chi-squared quantity analogous to the individual elements 
-#'                   of `z0tstat`}
+#'    \item{z0chisq}{A chi-squared quantity: sum of squared absolute values of `z0tstat`}
 #'    \item{roots}{eigenvalues of the system, ordered as in `z0tstat`.}
+#'    \item{tsmallroots}{The stationary roots, sorted by size of corresponding `z0tstat`}
 #' }
+#' Large, but stationary, roots, combined with large `z0stat` values, imply large and 
+#' persistent effects of unusual initial conditions.
 #' @export
 #' @md
 #' 
