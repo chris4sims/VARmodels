@@ -1,4 +1,4 @@
-#' Structural VAR estimation
+#' Structural VAR estimation: Now replaced by [svmdd()].
 #'
 #' The posterior integrated over A+ (the right-hand side coefficients), conditional
 #' on A0 and lmd.
