@@ -6,10 +6,13 @@
 #' proportional to the prior density on the unrestricted space, confined to
 #' the restricted space.  This makes sense if the restriction is approximating
 #' a restriction to a small neighborhood of the restricted space.
-#' For the case of \code{SVARhtskdmdd} output as input to this function, the
+#' For the case of \code{svmdd} output as input to this function, the
 #' results are conditional on the modal \code{A0} and \code{lmd}, which must
-#' be included in the \code{fitdata} argument. For the
-#' case of \code{mgnldensity()} output, the results condition on the modal
+#' be included in the \code{fitdata} argument. Note that the restrictions tested
+#' in the `sv` case are restrictions on the reduced form coefficients, not the
+#' structural form coefficients.
+#' For the
+#' case of `rfmdd` output, the results condition on the modal
 #' residual covariance matrix, as if it were known.  
 #' Restrictions can be specified as rows of \code{rmat}, with coefficients applied to
 #' elements of \code{By} and \code{Bx} stacked as they are in \code{xxi} (and
@@ -21,18 +24,18 @@
 #' non-trivial in the same call.
 #'
 #' @param fitdata Output from a var estimate with a proper prior from
-#'                \code{mgnldnsty()} or \code{SVARhtskmdd()})
-#' @param type Either \code{mdd}, \code{SVmdd}, depending on which
-#'             program produced \code{fitdata}.  Note that \code{mgls} takes model
-#'             structure from \code{yzrone}, so this is required even if all ones.
+#'                [rfmdd()] or [svmdd()]
+#' @param type \code{rf}, or `sv`. to indicate which program 
+#'             produced `fitdata` 
 #' @param rmat A matrix of restriction coefficients.
 #'
 #' @param yzrone An array of the same dimension as \code{By} from the model in
 #'               \code{fitdata}, non-zero except in those positions where a
-#'               coefficient is being restriced.  By default, the restriction
+#'               coefficient is being restricted.  By default, the restriction
 #'               sets the coefficient to zero, but restrictions to nonzero values
-#'               are possible with non-null \code{cyzr}.
-#' @param xzrone A matrix of the same dimension dimension as \code{Bx}, nonzero
+#'               are possible with non-null \code{cyzr}. Even where `yzrone` is
+#'               all ones (and hence not generating constraints), it must be present.
+#' @param xzrone A matrix of the same dimension as \code{Bx}, nonzero
 #'               except in the position of coefficients being restricted.
 #' @param const  The vector of right-hand side values for constraints specified
 #'               in the form `rmat %*%  coeffs == const`, where coeffs are
@@ -72,15 +75,15 @@
 #' @import tensor
 #' @export
 #' @md
-restrictVAR <- function(fitdata, type=c("mdd", "SVmdd"), rmat=NULL,
+restrictVAR <- function(fitdata, type=c("rf", "sv"), rmat=NULL,
                         yzrone=NULL, xzrone=NULL,const=NULL, cyzr=NULL,
                         cxzr=NULL) {
     if (length(type) > 1) type <- type[1]
-    if (type == "SVmdd") {
+    if (type == "sv") {
         ##  require("tensor")  #not needed if packaged, because of @import
         bvw <- fitdata
-        vout2 <- list(post=bvw$vout$var, prior=bvw$vout$varp)
-    } else { ## type == "mdd" 
+        vout2 <- list(post=bvw$var, prior=bvw$varp)
+    } else { ## type == "rf" 
             vout2 <- list(post=fitdata$var, prior=fitdata$varp)
     }
     neq <- dim(vout2[[1]]$By)[1]
@@ -208,7 +211,7 @@ restrictVAR <- function(fitdata, type=c("mdd", "SVmdd"), rmat=NULL,
         ## schwarX <- sqrtVbi %*% svdr$v
         ## schwarX <- -2 * sum(log(abs(svd(schwarX, nu=0)$d)))
         if(is.null(const)) const <- rep(0, dim(rmat)[1])
-        if(type == "SVmdd") {
+        if(type == "sv") {
             if (exists("tensor")) {
                 vout$By <- tensor(A0i, vout$By, 2, 1)
             } else {                    #workaround
