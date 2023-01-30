@@ -4,6 +4,8 @@
 #' heteroskeasticity.
 #'
 #' @details
+#' If `x0` is omitted,  both `x0` and `lh0` are taken from the posterior
+#' density maximizing values in `svwout`. This saves one density evaluation.
 #'
 #' @param svwout Usually the output list from `svarwrap()` with `verbose=TRUE`.
 #' @param x0 Initial value for a vector containing A0 and all but the last column
@@ -32,10 +34,6 @@ almdDraw <- function(svwout,
                      accratefrq=100
                      ) {
     nv <- dim(svwout$A0)[1]
-    if (is.null(x0)) {
-        nsig <- dim(svwout$lmd)[2]
-        x0 <- c(svwout$A0, svwout$lmd[ , 1:(nsig - 1)])
-    }
     svwarg <- with(svwout, list(ydata=ydata, lags=dim(vout$var$By)[3],
                                 xdata=xdata, const=const, Tsigbrk=vout$Tsigbrk,
                                 tight=vout$prior$tight,
@@ -46,9 +44,15 @@ almdDraw <- function(svwout,
                                 alpha = alpha
                                 )
                    )
+    if (is.null(x0)) {
+      nsig <- dim(svwout$lmd)[2]
+      x0 <- c(svwout$A0, svwout$lmd[ , 1:(nsig - 1)])
+      lh0 <- -svwout$lh
+    } else {
+      lh0 <- -do.call(svarwrap, c(list(x=x0), svwarg ))
+    }
     npar <- length(x0)
     draws <- matrix(0, nit, npar + 1)
-    lh0 <- -svwout$lh
     draws[1, ] <- c(x0, lh0)
     Hfac <- chol(H)
     accrate <- 0.0
