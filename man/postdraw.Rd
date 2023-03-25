@@ -7,7 +7,8 @@
 postdraw(vout, n, nosigprior = FALSE)
 }
 \arguments{
-\item{vout}{Output from \code{rfvar3}, or a list with the same names.}
+\item{vout}{Output from \code{rfvar}, or a list with the same names, like \code{rfmdd()}
+output lisst's  \verb{$var} element.}
 
 \item{n}{Number of draws.}
 

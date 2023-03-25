@@ -16,7 +16,7 @@ svarwrap(
   lambda = 5,
   mu = 1,
   sig = rep(0.01, NCOL(ydata)),
-  alpha = 6,
+  alpha = 0.5,
   OwnLagMeans = c(1.25, -0.25),
   verbose = FALSE
 )
@@ -53,9 +53,8 @@ if negative, does not include x's in the dummy observations}
 \item{sig}{Vector of prior guesses at standard deviations of reduced form
 residuals.}
 
-\item{alpha}{Parameter of symmetric Dirichlet distribution for the elements
-of each row of the lmd matrix.  Increasing alpha increases the
-prior's shrinkage toward equal variances in sub-periods.}
+\item{alpha}{Standard deviation of the lognormal distribution from which the
+\code{lmd} values are generated.}
 
 \item{OwnLagMeans}{Prior expectation of own lag coefficients in reduced form.
 See details.}
@@ -96,8 +95,9 @@ of shock scales plausible.
 \code{lmd} is a matrix defining the relative structural shock variances in
 the different periods defined by TsigBrk.  Each column of lmd corresponds to
 one of these periods, and each row corresponds to one shock variance.  Each
-row is normalized to average to one.  The priors on \code{lmd} are independent
-across rows and are scaled Dirichlet(2).
+row is normalized to have geometric mean one.  The priors on \code{lmd} are independent
+across rows and are scaled lognormal.
+#'
 
 For more detailed discussion of prior parameters see \code{\link[=svmdd]{svmdd()}}.
 }

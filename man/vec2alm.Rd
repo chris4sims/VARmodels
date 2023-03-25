@@ -4,7 +4,7 @@
 \alias{vec2alm}
 \title{Retrieve \code{A0} and lmd matrices from \code{x}}
 \usage{
-vec2alm(x, nv)
+vec2alm(x, nv, vnames = NULL)
 }
 \value{
 \describe{

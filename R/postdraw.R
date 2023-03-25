@@ -3,7 +3,8 @@
 #' Draw from the joint posterior distribution of a vector autoregression's coefficients and
 #' residual covariance matrix.
 #'
-#' @param vout Output from \code{rfvar3}, or a list with the same names.
+#' @param vout Output from \code{rfvar}, or a list with the same names, like `rfmdd()`
+#'             output lisst's  `$var` element.
 #' @param n Number of draws.
 #' @param nosigprior If TRUE, don't use the Jeffreys-motivated improper prior.
 #'
@@ -14,8 +15,6 @@
 #' @export
 #' 
 postdraw <- function(vout,n,nosigprior=FALSE){
-## 11/25/09 Bugnote:  If is.null(vout$Bx) (no constant, no exog vbles), code below
-## doesn't work.  Need to fix.
     ##--------------------
     ynames <- dimnames(vout$By)[[1]]
   xxi <- chol(vout$xxi)
@@ -36,7 +35,8 @@ postdraw <- function(vout,n,nosigprior=FALSE){
   Byx <- aperm(nmat, c(2,1,3))
   By <- Byx[ , 1:(neq*lags), ]
   dim(By) <- c(neq,neq,lags,n)
-  ## Bx <- as.vector(vout$Bx)+aperm(nmat,c(2,1,3))[,(neq*lags+1):ncf,]  # Bx added in both here and in cfmat. Bug caught by A.Zawadwoski
+  ## Bx <- as.vector(vout$Bx)+aperm(nmat,c(2,1,3))[,(neq*lags+1):ncf,]  
+  ## Bx added in both here and in cfmat. Bug caught by A.Zawadwoski
     if ( ncf == neq * lags  ) {
         Bx <- NULL
     } else {

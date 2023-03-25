@@ -8,8 +8,8 @@
 #' `smat` array is filled with the inverses of pdout$A.
 #' 
 #' @param pdout  Output from [postdraw`()] or [SVARpostdraw()].
-#' @param smat Wiht `postdraw` (from [rfvar{}] output, if NULL, the transpose of
-#'             `pdout$smat[ , , draw]} is used as initial shocks.  Otherwise,
+#' @param smat With `postdraw` (from [rfvar()] output, if NULL), the transpose of
+#'             `pdout$smat[ , , draw]` is used as initial shocks.  Otherwise,
 #'              this array is used, not transposed. With SVAR output, the inverse
 #'              of `A0` is used as initial shocks when `smat` is NULL.  `smat`
 #'              Can be a single matrix, used repeatedly.

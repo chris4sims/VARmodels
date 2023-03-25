@@ -20,7 +20,7 @@ almdDraw(
 \item{svwout}{Usually the output list from \code{svarwrap()} with \code{verbose=TRUE}.}
 
 \item{x0}{Initial value for a vector containing A0 and all but the last column
-of \code{lmd}.}
+of \code{lmd}.  If \code{NULL}, it is filled in from the \code{svwout} argument.}
 
 \item{H}{Approximate covariance matrix of draws.  Usually inherited from
 an optimization run that built up an approximation to the
@@ -41,4 +41,8 @@ average rate of acceptance of draws.}
 \description{
 Random walk Metropolis-Hastings draws from an SVAR posterior with ID through
 heteroskeasticity.
+}
+\details{
+If \code{x0} is omitted,  both \code{x0} and \code{lh0} are taken from the posterior
+density maximizing values in \code{svwout}. This saves one density evaluation.
 }

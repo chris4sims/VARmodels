@@ -9,7 +9,7 @@
 #'
 #' @param svwout Usually the output list from `svarwrap()` with `verbose=TRUE`.
 #' @param x0 Initial value for a vector containing A0 and all but the last column
-#'           of `lmd`.
+#'           of `lmd`.  If `NULL`, it is filled in from the `svwout` argument.
 #' @param H Approximate covariance matrix of draws.  Usually inherited from
 #'          an optimization run that built up an approximation to the
 #'          inverse second derivative matrix.  Should be positive definite
