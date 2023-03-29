@@ -7,6 +7,9 @@
 #' `with(mnplist, varprior(nx, lags, tight, decay, etc])',
 #' you have the actual, evaluated arguments in 'mnplist'.
 #' 
+#' Probably better, as it avoids writing out the whole arg list each call, is 
+#' `do.call(varprior, mnplist)`
+#'
 mnpparamSet <- function(nv=1,
                         nx=1,
                         lags=3,
