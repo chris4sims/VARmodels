@@ -2,7 +2,7 @@
 #'
 #' Allocates historical time series to VAR shocks that explain them
 #'
-#' @param vout List in format of [rfvar3()] output.
+#' @param vout List in format of [rfvar()] output.
 #' @param vts The time series data to be decomposed; usually the data used to
 #'            estimate `vout`. Must be a `ts` object.
 #' @param xdata Exogenous variable data.
@@ -19,8 +19,8 @@
 #' @md
 #' 
 histDecomp <- function(vout, vts, xdata=NULL, const=TRUE, orthmat=NULL) {
-  ## vout is output from rfvar3()
-  ## vts is the ydata argument for rfvar3() (usually) Must be a time series object.
+  ## vout is output from rfvar()
+  ## vts is the ydata argument for rfvar() (usually) Must be a time series object.
   ## ----------------------
   lags <- dim(vout$By)[3]
   nv <- dim(vout$By)[1]
