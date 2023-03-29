@@ -14,6 +14,20 @@ rfrpymout$mdd
 resprfmrpy <- impulsdtrf(rfrpymout$var, order=c(4,1,2,3))
 plotir(resprfmrpy, main="MRPY IRF's", file="mrpyirf.pdf")
 ## Structural VAR with ID through heteroskedasticity
+Tsigbrk <- matrix(c(1959,4, 
+                    1969,4, 
+                    1979,3, 
+                    1983,4, 
+                    1989,4, 
+                    1999,4, 
+                    2008,3, 
+                    2019,4), 8, 2, byrow=TRUE)
+svarglistrpym <- list(ydata=rpymdata, 
+                      lags=6, 
+                      Tsigbrk=Tsigbrk, 
+                      alpha=.5, 
+                      OwnLagMeans=c(1,25, -.25)
+                      )
 str(svarglistrpym)
 ## when the argument list is long, and you are going to experiment
 ## with variants on it, it is convenient to store the arguments in
