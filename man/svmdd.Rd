@@ -76,7 +76,7 @@ forming the prior.  Use \code{ic} instead.}
 }
 \value{
 \itemize{
-\item \code{w}: log Marginal posterior density for \code{A0}, \code{lmd}, with \verb{A+} integrated out.
+\item \code{mdd}: log Marginal posterior density for \code{A0}, \code{lmd}, with \verb{A+} integrated out.
 \item \code{var}: Output of \code{svar()} for full sample, including dummy observations.
 \item \code{varp}: output of \code{svar()} on prior dummy observations only.
 }

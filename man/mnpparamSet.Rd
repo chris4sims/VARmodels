@@ -27,4 +27,7 @@ Returns a default list of parameters, or allows varying elements of the list.
 This could be useful in documenting results.  If the list returned from this
 program (call it \verb{mnplist') is used in }with(mnplist, varprior(nx, lags, tight, decay, etc])',
 you have the actual, evaluated arguments in 'mnplist'.
+
+Probably better, as it avoids writing out the whole arg list each call, is
+\code{do.call(varprior, mnplist)}
 }

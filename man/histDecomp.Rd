@@ -7,7 +7,7 @@
 histDecomp(vout, vts, xdata = NULL, const = TRUE, orthmat = NULL)
 }
 \arguments{
-\item{vout}{List in format of \code{\link[=rfvar3]{rfvar3()}} output.}
+\item{vout}{List in format of \code{\link[=rfvar]{rfvar()}} output.}
 
 \item{vts}{The time series data to be decomposed; usually the data used to
 estimate \code{vout}. Must be a \code{ts} object.}
