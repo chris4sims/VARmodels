@@ -83,7 +83,7 @@
 #' @param verbose If FALSE, return only the log marginal posterior density for `A0,lmd'.
 
 #' @return
-#' * `w`: log Marginal posterior density for `A0`, `lmd`, with `A+` integrated out.
+#' * `mdd`: log Marginal posterior density for `A0`, `lmd`, with `A+` integrated out.
 #' * `var`: Output of `svar()` for full sample, including dummy observations.
 #' * `varp`: output of `svar()` on prior dummy observations only.
 #' + `uts`: residuals for real data, as time series with dates if there are no
@@ -231,7 +231,7 @@ svmdd <- function(ydata,
     ##  const is FALSE in this call because ones alread put into xdata
     if (is.null(var)) {
         print("Call to svar() failed")
-        return(list(w = -Inf))
+        return(list(mdd = -Inf))
     }    
     Tu <- dim(var$u)[1]
     if ( any(var$snglty > 0) ) error( var$snglty, " redundant columns in rhs matrix")
@@ -285,7 +285,7 @@ svmdd <- function(ydata,
             pintp <- llhp + normalizer
             mdd <- intp - pintp
             llh <- llh - normalizer
-            ## llh is height of posterior density over A0, lmd, A+ at peak.  w is height of
+            ## llh is height of posterior density over A0, lmd, A+ at peak. mdd is height of
             ## marginal posterior for A0, lmd, with A+ integrated out.
         }
     } else {
