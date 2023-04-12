@@ -125,7 +125,7 @@ svarwrap  <-  function(x,
     #### proceed normally
     ##---------lognormal ------------------------
     ##=        For Dirichlet, filling last col done before zero-check
-    lmd[, nSig] <- exp(-sum(log(lmd[ , -nSig])))
+    lmd[, nSig] <- apply(lmd[ , -nSig], 1, function(x) exp(-sum(log(x))))
     ## lmd prior
     ##-------------Dirichlet version-------------------------
     # lpL <- (alpha - 1) * apply(log(lmd) - log(nSig), 1, sum) -
@@ -137,7 +137,7 @@ svarwrap  <-  function(x,
     ##------------- lognormal version--------------------------
     rowpdf <-
       function(x) {
-        -(nSig - 1) * (log(alpha) + .5 * log(2 * pi)) - .5 * log(nSig) -
+        -(nSig - 1) * (log(alpha) + .5 * log(2 * pi)) + .5 * log(nSig) -
           (.5 / alpha ^ 2) * log(x) %*%
           (diag(nSig - 1) + matrix(1, nrow = nSig - 1, ncol = nSig - 1)) %*%
           log(x) - sum(log(x))
