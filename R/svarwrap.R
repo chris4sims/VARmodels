@@ -12,7 +12,7 @@
 #' of shock scales plausible.
 #'
 #' @details `lmd` is a matrix defining the relative structural shock variances in
-#' the different periods defined by TsigBrk.  Each column of lmd corresponds to
+#' the differerent periods defined by TsigBrk.  Each column of lmd corresponds to
 #' one of these periods, and each row corresponds to one shock variance.  Each
 #' row is normalized to have geometric mean one.  The priors on `lmd` are independent
 #' across rows and are scaled lognormal.
