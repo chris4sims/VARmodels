@@ -9,7 +9,8 @@
 #'
 #' @return \describe{
 #'                   \item{A}{`nv` by `nv` by `ndraw `A0` array}
-#'                   \item{lmd}{`nv` by `nSig` by `ndraw` `lmd` array
+#'                   \item{lmd}{`nv` by `nSig` by `ndraw` `lmd` array}
+#'                   }
 #' @export
 #' @md
 #' 
